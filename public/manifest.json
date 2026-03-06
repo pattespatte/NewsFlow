@@ -1,0 +1,49 @@
+{
+  "name": "NewsFlow - RSS Reader",
+  "short_name": "NewsFlow",
+  "description": "Your daily news companion - Stay updated with the latest news from NYT, BBC, Reuters, NPR, Guardian, and Wired",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#f43f5e",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-1024.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["news", "productivity", "utilities"],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "View All News",
+      "url": "/",
+      "description": "View all news articles"
+    },
+    {
+      "name": "View Bookmarks",
+      "url": "/?bookmarks=true",
+      "description": "View saved articles"
+    }
+  ],
+  "prefer_related_applications": false,
+  "related_applications": [],
+  "lang": "en-US",
+  "dir": "ltr"
+}
