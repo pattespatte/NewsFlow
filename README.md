@@ -1,58 +1,40 @@
-# 🚀 Welcome to Z.ai Code Scaffold
+# 📰 NewsFlow RSS Reader
 
-A modern, production-ready web application scaffold powered by cutting-edge technologies, designed to accelerate your development with [Z.ai](https://chat.z.ai)'s AI-powered coding assistance.
+A modern, beautiful RSS reader web application built with Next.js 15, featuring news from 9 major sources including NYT, BBC, NBC, ABC, CBS, Al Jazeera, NPR, The Guardian, and Wired.
 
-## ✨ Technology Stack
+![NewsFlow](https://img.shields.io/badge/Next.js-16-black?style=flat&logo=next.js)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?style=flat&logo=typescript)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind-4-38B2AC?style=flat&logo=tailwind-css)
 
-This scaffold provides a robust foundation built with:
+## ✨ Features
 
-### 🎯 Core Framework
-- **⚡ Next.js 16** - The React framework for production with App Router
-- **📘 TypeScript 5** - Type-safe JavaScript for better developer experience
-- **🎨 Tailwind CSS 4** - Utility-first CSS framework for rapid UI development
+### 🌍 News Sources
+- **NYT** - Top Stories, World, Technology, Business feeds
+- **BBC** - World News
+- **NBC News** - Latest headlines
+- **ABC News** - Top Stories
+- **CBS News** - Latest News
+- **Al Jazeera** - International coverage
+- **NPR** - US News
+- **The Guardian** - World News
+- **Wired** - Technology & Culture
 
-### 🧩 UI Components & Styling
-- **🧩 shadcn/ui** - High-quality, accessible components built on Radix UI
-- **🎯 Lucide React** - Beautiful & consistent icon library
-- **🌈 Framer Motion** - Production-ready motion library for React
-- **🎨 Next Themes** - Perfect dark mode in 2 lines of code
+### 🎨 User Experience
+- **Article Deduplication** - Smart URL-based deduplication prevents duplicate articles from multiple sources
+- **Search & Filter** - Full-text search across all articles with source filtering
+- **Bookmarks** - Save articles for later reading with localStorage persistence
+- **Dark/Light Mode** - Beautiful theme switching with system preference detection
+- **Responsive Design** - Mobile-first design that works on all devices
+- **PWA Support** - Install as a home screen app on mobile devices
 
-### 📋 Forms & Validation
-- **🎣 React Hook Form** - Performant forms with easy validation
-- **✅ Zod** - TypeScript-first schema validation
-
-### 🔄 State Management & Data Fetching
-- **🐻 Zustand** - Simple, scalable state management
-- **🔄 TanStack Query** - Powerful data synchronization for React
-- **🌐 Fetch** - Promise-based HTTP request
-
-### 🗄️ Database & Backend
-- **🗄️ Prisma** - Next-generation TypeScript ORM
-- **🔐 NextAuth.js** - Complete open-source authentication solution
-
-### 🎨 Advanced UI Features
-- **📊 TanStack Table** - Headless UI for building tables and datagrids
-- **🖱️ DND Kit** - Modern drag and drop toolkit for React
-- **📊 Recharts** - Redefined chart library built with React and D3
-- **🖼️ Sharp** - High performance image processing
-
-### 🌍 Internationalization & Utilities
-- **🌍 Next Intl** - Internationalization library for Next.js
-- **📅 Date-fns** - Modern JavaScript date utility library
-- **🪝 ReactUse** - Collection of essential React hooks for modern development
-
-## 🎯 Why This Scaffold?
-
-- **🏎️ Fast Development** - Pre-configured tooling and best practices
-- **🎨 Beautiful UI** - Complete shadcn/ui component library with advanced interactions
-- **🔒 Type Safety** - Full TypeScript configuration with Zod validation
-- **📱 Responsive** - Mobile-first design principles with smooth animations
-- **🗄️ Database Ready** - Prisma ORM configured for rapid backend development
-- **🔐 Auth Included** - NextAuth.js for secure authentication flows
-- **📊 Data Visualization** - Charts, tables, and drag-and-drop functionality
-- **🌍 i18n Ready** - Multi-language support with Next Intl
-- **🚀 Production Ready** - Optimized build and deployment settings
-- **🤖 AI-Friendly** - Structured codebase perfect for AI assistance
+### 🔧 Technical Features
+- **Server-side RSS Fetching** - Bypasses CORS issues and caches for 5 minutes
+- **HTML Entity Decoding** - Properly handles all HTML entities including numeric ones
+- **Image Extraction** - Pulls article images from RSS feeds (media:content, enclosures, content:encoded)
+- **Click-to-Read** - Entire article cards are clickable to open full articles
+- **Pagination** - Load more articles on demand for better performance
+- **Error Handling** - Graceful error messages when feeds fail to load
+- **Optimized Dependencies** - Only ~520MB node_modules (down from 1GB+)
 
 ## 🚀 Quick Start
 
@@ -70,72 +52,95 @@ bun run build
 bun start
 ```
 
-Open [http://localhost:3000](http://localhost:3000) to see your application running.
-
-## 🤖 Powered by Z.ai
-
-This scaffold is optimized for use with [Z.ai](https://chat.z.ai) - your AI assistant for:
-
-- **💻 Code Generation** - Generate components, pages, and features instantly
-- **🎨 UI Development** - Create beautiful interfaces with AI assistance  
-- **🔧 Bug Fixing** - Identify and resolve issues with intelligent suggestions
-- **📝 Documentation** - Auto-generate comprehensive documentation
-- **🚀 Optimization** - Performance improvements and best practices
-
-Ready to build something amazing? Start chatting with Z.ai at [chat.z.ai](https://chat.z.ai) and experience the future of AI-powered development!
+Visit [http://localhost:3000](http://localhost:3000) to see your RSS reader running.
 
 ## 📁 Project Structure
 
 ```
 src/
-├── app/                 # Next.js App Router pages
-├── components/          # Reusable React components
-│   └── ui/             # shadcn/ui components
-├── hooks/              # Custom React hooks
-└── lib/                # Utility functions and configurations
+├── app/
+│   ├── api/
+│   │   └── rss/
+│   │       └── route.ts        # RSS feed fetching API with caching
+│   ├── layout.tsx              # Root layout with theme provider
+│   ├── page.tsx                # Main application page
+│   └── globals.css             # Global styles and theme variables
+├── components/
+│   ├── Header.tsx              # App header with search and theme toggle
+│   ├── ArticleCard.tsx         # Individual article card component
+│   ├── SourceTabs.tsx          # Source filter tabs
+│   ├── LoadingSkeleton.tsx     # Loading state skeleton
+│   ├── ThemeProvider.tsx       # Theme provider component
+│   └── ThemeToggle.tsx         # Dark/light mode toggle button
+│   └── ui/                     # shadcn/ui components
+├── hooks/
+│   ├── use-mobile.ts            # Mobile detection hook
+│   └── use-toast.ts             # Toast notification hook
+├── lib/
+│   ├── constants.ts             # App constants (STORAGE_KEYS, RSS_CONSTANTS, etc.)
+│   ├── rss.ts                   # RSS parsing utilities
+│   ├── sources.ts               # News source configurations
+│   └── utils.ts                 # Helper functions
+└── types/
+    └── article.ts               # TypeScript interfaces
 ```
 
-## 🎨 Available Features & Components
+## 🛠️ Technologies Used
 
-This scaffold includes a comprehensive set of modern web development tools:
+- **Next.js 16** - React framework with App Router
+- **TypeScript 5** - Type-safe development
+- **Tailwind CSS 4** - Utility-first styling
+- **shadcn/ui** - High-quality UI components
+- **Lucide React** - Icon library
+- **next-themes** - Theme management
+- **Framer Motion** - Animations
+- **Sonner** - Toast notifications
 
-### 🧩 UI Components (shadcn/ui)
-- **Layout**: Card, Separator, Aspect Ratio, Resizable Panels
-- **Forms**: Input, Textarea, Select, Checkbox, Radio Group, Switch
-- **Feedback**: Alert, Toast (Sonner), Progress, Skeleton
-- **Navigation**: Breadcrumb, Menubar, Navigation Menu, Pagination
-- **Overlay**: Dialog, Sheet, Popover, Tooltip, Hover Card
-- **Data Display**: Badge, Avatar, Calendar
+## 📱 PWA Features
 
-### 📊 Advanced Data Features
-- **Tables**: Powerful data tables with sorting, filtering, pagination (TanStack Table)
-- **Charts**: Beautiful visualizations with Recharts
-- **Forms**: Type-safe forms with React Hook Form + Zod validation
+NewsFlow is built as a Progressive Web App (PWA):
 
-### 🎨 Interactive Features
-- **Animations**: Smooth micro-interactions with Framer Motion
-- **Drag & Drop**: Modern drag-and-drop functionality with DND Kit
-- **Theme Switching**: Built-in dark/light mode support
+- Installable on mobile devices
+- Service worker for offline capability
+- App icons in multiple sizes (192x192, 512x512, 1024x1024)
+- Responsive mobile-first design
+- Touch-optimized interface
 
-### 🔐 Backend Integration
-- **Authentication**: Ready-to-use auth flows with NextAuth.js
-- **Database**: Type-safe database operations with Prisma
-- **API Client**: HTTP requests with Fetch + TanStack Query
-- **State Management**: Simple and scalable with Zustand
+## 🔧 Configuration
 
-### 🌍 Production Features
-- **Internationalization**: Multi-language support with Next Intl
-- **Image Optimization**: Automatic image processing with Sharp
-- **Type Safety**: End-to-end TypeScript with Zod validation
-- **Essential Hooks**: 100+ useful React hooks with ReactUse for common patterns
+### Adding New News Sources
 
-## 🤝 Get Started with Z.ai
+Edit `src/lib/sources.ts`:
 
-1. **Clone this scaffold** to jumpstart your project
-2. **Visit [chat.z.ai](https://chat.z.ai)** to access your AI coding assistant
-3. **Start building** with intelligent code generation and assistance
-4. **Deploy with confidence** using the production-ready setup
+```typescript
+{
+  id: 'your-source',
+  name: 'Your Source Name',
+  url: 'https://example.com/feed.rss',
+  color: '#CC0000',
+  bgColor: '#FEF2F2',
+}
+```
 
----
+### Adjusting Cache Settings
 
-Built with ❤️ for the developer community. Supercharged by [Z.ai](https://chat.z.ai) 🚀
+Edit `src/lib/constants.ts`:
+
+```typescript
+RSS_CONSTANTS: {
+  MIN_XML_LENGTH: 100,
+  MAX_ARTICLES: 150,
+  CACHE_TTL: 5 * 60 * 1000, // 5 minutes
+  FETCH_TIMEOUT: 10 * 1000, // 10 seconds
+} as const;
+```
+
+## 📝 License
+
+This project is open source and available under the MIT License.
+
+## 🙏 Acknowledgments
+
+- News sources mentioned above for their RSS feeds
+- shadcn/ui for the beautiful UI components
+- Next.js team for the amazing framework
