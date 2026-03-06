@@ -9,7 +9,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle, Newspaper, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { matchesSearch } from '@/lib/utils';
-import { STORAGE_KEYS, ALL_SOURCES_ID, ITEMS_PER_PAGE } from '@/lib/constants';
+import { STORAGE_KEYS, ALL_SOURCES_ID, ITEMS_PER_PAGE, API_URL } from '@/lib/constants';
 import type { Article, RSSResponse } from '@/types/article';
 
 export default function Home() {
@@ -52,7 +52,7 @@ export default function Home() {
 
     try {
       const source = sourceId || activeSource;
-      const url = `/api/rss?source=${source === ALL_SOURCES_ID ? ALL_SOURCES_ID : source}`;
+      const url = `${API_URL}/rss?source=${source === ALL_SOURCES_ID ? ALL_SOURCES_ID : source}`;
 
       const response = await fetch(url);
       const data: RSSResponse = await response.json();

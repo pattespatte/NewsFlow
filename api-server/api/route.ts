@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
-import { NEWS_SOURCES } from '@/lib/sources';
-import { parseRssFeed } from '@/lib/rss';
-import { RSS_CONSTANTS } from '@/lib/constants';
-import type { Article, RSSResponse } from '@/types/article';
+import { NEWS_SOURCES } from '../src/lib/sources';
+import { parseRssFeed } from '../src/lib/rss';
+import { RSS_CONSTANTS } from '../src/lib/constants';
+import type { Article, RSSResponse } from '../src/types/article';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
