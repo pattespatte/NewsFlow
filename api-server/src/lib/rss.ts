@@ -1,4 +1,4 @@
-import type { Article, RSSFeed, RSSItem, NewsSource } from '../types/article'';
+import type { Article, RSSFeed, RSSItem, NewsSource } from '../types/article';
 
 function generateId(title: string, link: string): string {
   const hash = (str: string): string => {

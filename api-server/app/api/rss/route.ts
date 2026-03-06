@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
-import { NEWS_SOURCES } from '../src/lib/sources';
-import { parseRssFeed } from '../src/lib/rss';
-import { RSS_CONSTANTS } from '../src/lib/constants';
-import type { Article, RSSResponse } from '../src/types/article';
+import { NEWS_SOURCES } from '../../../src/lib/sources';
+import { parseRssFeed } from '../../../src/lib/rss';
+import { RSS_CONSTANTS } from '../../../src/lib/constants';
+import type { Article, RSSResponse } from '../../../src/types/article';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -57,7 +57,6 @@ async function fetchFeed(url: string, sourceId: string): Promise<{ articles: Art
         'User-Agent': 'Mozilla/5.0 (compatible; NewsFlowRSS/1.0)',
       },
       signal: controller.signal,
-      next: { revalidate: 300 }, // Cache for 5 minutes at Next.js level too
     });
 
     clearTimeout(timeoutId);
