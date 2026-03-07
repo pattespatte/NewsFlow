@@ -44,15 +44,60 @@ A modern, beautiful RSS reader web application built with Next.js 16, featuring 
 ```bash
 # Install dependencies
 bun install
-
-# Start development server (includes local API)
-bun run dev
-
-# Build for production (static export)
-bun run build
 ```
 
-Visit [http://localhost:3000](http://localhost:3000) to see your RSS reader running.
+### Local Development
+
+NewsFlow supports three API modes for local development:
+
+#### Option 1: Local API Server (Default)
+
+Run both the frontend and a local API server:
+
+```bash
+# Terminal 1: Start the API server on port 3001
+cd api-server
+npm run dev
+
+# Terminal 2: Start the frontend (uses local API by default)
+bun run dev
+```
+
+Visit [http://localhost:3000](http://localhost:3000) for the frontend.
+
+#### Option 2: Production API (Recommended)
+
+Use the deployed Vercel API for faster development without running a local API server:
+
+```bash
+# Create .env.local file
+echo "NEXT_PUBLIC_API_URL=https://news-flow-rho.vercel.app" > .env.local
+
+# Run dev server
+bun run dev
+```
+
+#### Option 3: Custom Local API Port
+
+If your API server runs on a different port:
+
+```bash
+# Create .env.local file with custom port
+echo "NEXT_PUBLIC_API_URL=http://localhost:3001" > .env.local
+
+# Run dev server
+bun run dev
+```
+
+### Production Build
+
+```bash
+# Build for production (static export)
+bun run build
+
+# Preview production build locally
+bun run start
+```
 
 ## 🚢 Deployment
 
@@ -191,17 +236,17 @@ RSS_CONSTANTS: {
 } as const;
 ```
 
-### Local Development with External API
+### API Configuration for Local Development
 
-For local development using an external API:
+The API URL is controlled by the `NEXT_PUBLIC_API_URL` environment variable:
 
-```bash
-# Create .env.local file
-echo "NEXT_PUBLIC_API_URL=https://your-api.vercel.app" > .env.local
+| Value | API Used | Notes |
+|-------|----------|-------|
+| *(empty)* | `/api` (relative) | Default - requires local API server running |
+| `http://localhost:3001` | Local API on port 3001 | For custom local API port |
+| `https://news-flow-rho.vercel.app` | Production Vercel API | Recommended - no local API needed |
 
-# Then run dev server
-bun run dev
-```
+The `/api` path is appended automatically if not already included in the URL.
 
 ## 📝 License
 
