@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import Link from 'next/link';
 import { Header } from '@/components/Header';
 import { SourceTabs } from '@/components/SourceTabs';
 import { ArticleCard } from '@/components/ArticleCard';
@@ -298,9 +299,9 @@ export default function Home() {
             Articles link to original publishers. We display excerpts for discovery purposes only.
           </p>
           <div className="mt-3 flex justify-center gap-4 text-xs">
-            <a href="/terms" className="hover:underline">Terms</a>
+            <Link href="/terms" className="hover:underline">Terms</Link>
             <span>•</span>
-            <a href="/privacy" className="hover:underline">Privacy</a>
+            <Link href="/privacy" className="hover:underline">Privacy</Link>
           </div>
         </div>
       </footer>
