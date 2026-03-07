@@ -30,7 +30,7 @@ jobs:
         run: bun install
 
       - name: Build
-        run: bun run build
+        run: next build
         env:
           GITHUB_PAGES: "true"
           NEXT_PUBLIC_API_URL: ${{ secrets.API_URL }}
