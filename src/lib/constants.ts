@@ -6,7 +6,7 @@ export const STORAGE_KEYS = {
 // API Configuration
 // For local development, use relative path. For production, set NEXT_PUBLIC_API_URL env var.
 export const API_URL = typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_API_URL
-  ? process.env.NEXT_PUBLIC_API_URL
+  ? (process.env.NEXT_PUBLIC_API_URL.endsWith('/api') ? process.env.NEXT_PUBLIC_API_URL : `${process.env.NEXT_PUBLIC_API_URL}/api`)
   : '/api';
 
 // Source IDs
