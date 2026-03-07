@@ -145,10 +145,25 @@ export async function GET(request: Request) {
     response.errors.push(message);
   }
 
-  // Set cache headers
+  // Set cache and CORS headers
   return NextResponse.json(response, {
     headers: {
       'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=150',
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+    },
+  });
+}
+
+// Handle OPTIONS request for CORS preflight
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
     },
   });
 }
