@@ -36,13 +36,16 @@ function stripHtml(html: string): string {
   return text;
 }
 
+// UTM tracking parameters to remove from URLs
+const TRACKING_PARAMS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'] as const;
+
 function stripTrackingParams(url: string): string {
   try {
     const urlObj = new URL(url);
-    // Remove UTM tracking parameters
-    const paramsToRemove = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'];
-    paramsToRemove.forEach(param => urlObj.searchParams.delete(param));
-    return urlObj.toString();
+    for (const param of TRACKING_PARAMS) {
+      urlObj.searchParams.delete(param);
+    }
+    return urlObj.href;
   } catch {
     return url;
   }

@@ -108,7 +108,7 @@ export const NEWS_SOURCES: NewsSource[] = [
   {
     id: 'the-hill',
     name: 'The Hill',
-    url: 'https://feeds.feedburner.com/thehill',
+    url: 'https://thehill.com/feed/',
     color: '#222222',
     bgColor: '#F5F5F5',
   },
