@@ -36,6 +36,18 @@ function stripHtml(html: string): string {
   return text;
 }
 
+function stripTrackingParams(url: string): string {
+  try {
+    const urlObj = new URL(url);
+    // Remove UTM tracking parameters
+    const paramsToRemove = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'];
+    paramsToRemove.forEach(param => urlObj.searchParams.delete(param));
+    return urlObj.toString();
+  } catch {
+    return url;
+  }
+}
+
 function extractImageUrl(item: RSSItem): string | undefined {
   // Check for <image> tag (used by CBS News and others)
   if (item.image) {
@@ -181,7 +193,7 @@ export function parseRssFeed(xml: string, source: NewsSource): Article[] {
       id: generateId(title, item.link),
       title,
       description,
-      link: item.link,
+      link: stripTrackingParams(item.link),
       pubDate: item.pubDate || new Date().toISOString(),
       source: {
         id: source.id,
