@@ -4,10 +4,12 @@ export const STORAGE_KEYS = {
 } as const;
 
 // API Configuration
-// For local development, use relative path. For production, set NEXT_PUBLIC_API_URL env var.
-export const API_URL = typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_API_URL
-  ? (process.env.NEXT_PUBLIC_API_URL.endsWith('/api') ? process.env.NEXT_PUBLIC_API_URL : `${process.env.NEXT_PUBLIC_API_URL}/api`)
-  : '/api';
+// Use NEXT_PUBLIC_API_URL environment variable to override the API endpoint
+// Examples:
+//   - Local API: (not set, defaults to '/api')
+//   - Vercel API: 'https://your-app.vercel.app/api'
+//   - Custom API: 'https://api.example.com'
+export const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
 
 // Source IDs
 export const ALL_SOURCES_ID = 'all';

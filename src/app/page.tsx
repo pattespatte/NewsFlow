@@ -10,8 +10,11 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle, Newspaper, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { matchesSearch } from '@/lib/utils';
-import { STORAGE_KEYS, ALL_SOURCES_ID, ITEMS_PER_PAGE, API_URL } from '@/lib/constants';
+import { API_URL, STORAGE_KEYS, ALL_SOURCES_ID, ITEMS_PER_PAGE } from '@/lib/constants';
+import { ClientTime } from '@/components/ClientTime';
 import type { Article, RSSResponse } from '@/types/article';
+
+// Local constants (deprecated - use imports from @/lib/constants)
 
 export default function Home() {
   const [articles, setArticles] = useState<Article[]>([]);
@@ -165,7 +168,7 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background" suppressHydrationWarning>
       <Header
         showBookmarks={showBookmarks}
         onToggleBookmarks={handleToggleBookmarks}
@@ -283,7 +286,7 @@ export default function Home() {
         {/* Last Updated */}
         {lastUpdated && !isLoading && (
           <div className="text-center py-4 text-xs text-muted-foreground border-t">
-            Last updated: {new Date(lastUpdated).toLocaleTimeString()}
+            Last updated: <ClientTime isoString={lastUpdated} />
           </div>
         )}
       </main>

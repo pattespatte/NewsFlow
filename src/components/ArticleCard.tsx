@@ -38,7 +38,7 @@ export function ArticleCard({ article, isBookmarked, onToggleBookmark }: Article
                 target.src = placeholderImage;
               }}
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-[250ms] ease-out" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 ease-out" />
           </div>
 
           {/* Source Badge */}
@@ -66,7 +66,7 @@ export function ArticleCard({ article, isBookmarked, onToggleBookmark }: Article
 
         <CardContent className="p-4 flex flex-col flex-grow">
           {/* Title */}
-          <h3 className="font-bold text-base leading-snug mb-2 line-clamp-2 group-hover:text-primary transition-colors duration-[250ms] ease-out flex-grow">
+          <h3 className="font-bold text-base leading-snug mb-2 line-clamp-2 group-hover:text-primary transition-colors duration-200 ease-out flex-grow">
             {article.title}
           </h3>
 
@@ -88,7 +88,7 @@ export function ArticleCard({ article, isBookmarked, onToggleBookmark }: Article
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 hover:bg-rose-100 dark:hover:bg-rose-950/30 transition-colors duration-[250ms] ease-out"
+                className="h-8 w-8 hover:bg-rose-100 dark:hover:bg-rose-950/30 transition-colors duration-200 ease-out"
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
@@ -97,14 +97,14 @@ export function ArticleCard({ article, isBookmarked, onToggleBookmark }: Article
               >
                 <Bookmark
                   className={cn(
-                    'w-4 h-4 transition-all duration-[250ms] ease-out',
+                    'w-4 h-4 transition-all duration-200 ease-out',
                     isBookmarked ? 'fill-rose-500 text-rose-500 scale-110' : 'hover:text-rose-500'
                   )}
                 />
               </Button>
 
-              <div className="h-8 w-8 flex items-center justify-center hover:bg-primary/10 rounded-md transition-colors duration-[250ms] ease-out">
-                <ExternalLink className="w-4 h-4 text-muted-foreground transition-transform duration-[250ms] ease-out group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+              <div className="h-8 w-8 flex items-center justify-center hover:bg-primary/10 rounded-md transition-colors duration-200 ease-out">
+                <ExternalLink className="w-4 h-4 text-muted-foreground transition-transform duration-200 ease-out group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
               </div>
             </div>
           </div>

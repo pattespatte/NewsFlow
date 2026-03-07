@@ -1,5 +1,8 @@
 import type { NewsSource } from '@/types/article';
-import { ALL_SOURCES_ID } from '@/lib/constants';
+import { ALL_SOURCES_ID } from './constants';
+
+// Re-export for convenience
+export { ALL_SOURCES_ID };
 
 export const ALL_NEWS_SOURCE: NewsSource = {
   id: ALL_SOURCES_ID,
