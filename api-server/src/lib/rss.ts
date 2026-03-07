@@ -42,14 +42,14 @@ function extractImageUrl(item: RSSItem): string | undefined {
     return item.image;
   }
 
-  // Check for media:content
-  if (item['media:content']) {
-    return item['media:content'];
-  }
-
-  // Check for media:thumbnail
+  // Check for media:thumbnail (images only, media:content can be video)
   if (item['media:thumbnail']) {
     return item['media:thumbnail'];
+  }
+
+  // Check for media:content (only if not already found in thumbnail)
+  if (item['media:content']) {
+    return item['media:content'];
   }
 
   // Check for enclosure with image type
