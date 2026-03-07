@@ -100,6 +100,17 @@ function convertCbsThumbnailToLarge(url: string): string {
   return url;
 }
 
+// Convert Guardian small images to larger size
+// Guardian provides images with width parameter (e.g., width=140)
+// Replace with larger width for better quality
+function convertGuardianImageToLarge(url: string): string {
+  if (url.includes('i.guim.co.uk')) {
+    // Replace any width parameter with width=700 for better quality
+    return url.replace(/width=\d+/, 'width=700');
+  }
+  return url;
+}
+
 function extractImageUrl(item: RSSItem): string | undefined {
   // Check for <image> tag (used by CBS News and others)
   if (item.image) {
@@ -108,12 +119,12 @@ function extractImageUrl(item: RSSItem): string | undefined {
 
   // Check for media:thumbnail (images only, media:content can be video)
   if (item['media:thumbnail']) {
-    return item['media:thumbnail'];
+    return convertGuardianImageToLarge(item['media:thumbnail']);
   }
 
   // Check for media:content (only if not already found in thumbnail)
   if (item['media:content']) {
-    return item['media:content'];
+    return convertGuardianImageToLarge(item['media:content']);
   }
 
   // Check for enclosure with image type
