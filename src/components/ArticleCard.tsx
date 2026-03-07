@@ -24,36 +24,14 @@ export function ArticleCard({ article, isBookmarked, onToggleBookmark }: Article
       rel="noopener noreferrer"
       className="block group"
     >
-      <Card
-        className="h-full border-border/50 hover:border-border bg-card flex flex-col cursor-pointer"
-        style={{
-          transition: 'box-shadow 250ms ease-out, border-color 250ms ease-out, transform 250ms ease-out',
-        }}
-        onMouseEnter={(e) => {
-          const card = e.currentTarget;
-          card.style.boxShadow = '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)';
-        }}
-        onMouseLeave={(e) => {
-          const card = e.currentTarget;
-          card.style.boxShadow = '';
-        }}
-      >
+      <Card className="article-card h-full hover:shadow-xl border-border/50 hover:border-border bg-card flex flex-col cursor-pointer">
         <div className="relative flex-shrink-0">
           {/* Image Container */}
           <div className="relative aspect-[16/10] overflow-hidden bg-muted">
             <img
               src={article.imageUrl || placeholderImage}
               alt={article.title}
-              className="w-full h-full object-cover"
-              style={{
-                transition: 'transform 250ms ease-out',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'scale(1.05)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'scale(1)';
-              }}
+              className="article-card-image w-full h-full object-cover"
               loading="lazy"
               onError={(e) => {
                 const target = e.target as HTMLImageElement;

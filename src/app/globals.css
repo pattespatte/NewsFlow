@@ -306,3 +306,16 @@ html {
 .hide-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
+/* Article card smooth hover transitions - high specificity to override base transitions */
+.article-card {
+  transition: box-shadow 250ms ease-out, border-color 250ms ease-out !important;
+}
+
+.article-card-image {
+  transition: transform 250ms ease-out !important;
+}
+
+.group:hover .article-card-image {
+  transform: scale(1.05);
+}
