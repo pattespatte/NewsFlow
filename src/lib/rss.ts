@@ -51,10 +51,25 @@ function stripTrackingParams(url: string): string {
   }
 }
 
+/**
+ * Convert CBS News thumbnail URLs to larger image sizes
+ * CBS provides 60x60 thumbnails by default, we convert to 640x360
+ */
+function convertCbsThumbnailToLarge(url: string): string {
+  if (url.includes('cbsnewsstatic.com') && url.includes('/thumbnail/')) {
+    // Replace small thumbnail with larger size
+    return url
+      .replace(/\/thumbnail\/60x60\//g, '/thumbnail/640x360/')
+      .replace(/\/thumbnail\/120x120\//g, '/thumbnail/640x360/')
+      .replace(/\/thumbnail\/\d+x\d+\//g, '/thumbnail/640x360/');
+  }
+  return url;
+}
+
 function extractImageUrl(item: RSSItem): string | undefined {
   // Check for <image> tag (used by CBS News and others)
   if (item.image) {
-    return item.image;
+    return convertCbsThumbnailToLarge(item.image);
   }
 
   // Check for media:thumbnail (images only, media:content can be video)
