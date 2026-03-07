@@ -292,8 +292,16 @@ export default function Home() {
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
           <p className="font-medium text-foreground">NewsFlow</p>
           <p className="mt-1">
-            Powered by RSS feeds from NYT, BBC, Reuters, NPR, Guardian, and Wired
+            Content from their respective sources. All trademarks and copyrighted material belong to their owners.
           </p>
+          <p className="mt-2 text-xs">
+            Articles link to original publishers. We display excerpts for discovery purposes only.
+          </p>
+          <div className="mt-3 flex justify-center gap-4 text-xs">
+            <a href="/terms" className="hover:underline">Terms</a>
+            <span>•</span>
+            <a href="/privacy" className="hover:underline">Privacy</a>
+          </div>
         </div>
       </footer>
     </div>
