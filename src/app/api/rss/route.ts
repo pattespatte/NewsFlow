@@ -78,7 +78,7 @@ async function fetchFeed(url: string, sourceId: string): Promise<{ articles: Art
       return errorData;
     }
 
-    const articles = parseRssFeed(xml, source);
+    const articles = await parseRssFeed(xml, source);
     const result = { articles };
 
     // Cache the result

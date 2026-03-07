@@ -52,6 +52,43 @@ function stripTrackingParams(url: string): string {
   }
 }
 
+// Fetch Al Jazeera article page and extract the og:image
+async function fetchAlJazeeraImage(articleUrl: string): Promise<string | undefined> {
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+    const response = await fetch(articleUrl, {
+      headers: {
+        'Accept': 'text/html',
+        'User-Agent': 'Mozilla/5.0 (compatible; NewsFlowRSS/1.0)',
+      },
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      return undefined;
+    }
+
+    const html = await response.text();
+
+    // Extract og:image meta tag content
+    const ogImageMatch = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i);
+    if (ogImageMatch) {
+      let imageUrl = ogImageMatch[1].replace(/&amp;/g, '&');
+      // Remove resize query parameters to get the original image
+      imageUrl = imageUrl.replace(/\?resize=\d+%2C\d+$/, '');
+      return imageUrl;
+    }
+
+    return undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 // Convert CBS News thumbnail URLs to full-size images
 // CBS provides small thumbnails like: /thumbnail/60x60/<hash>/filename.jpg
 // Removing the thumbnail path returns the full-size image
@@ -189,7 +226,7 @@ function parseRssXml(xml: string): RSSFeed {
   };
 }
 
-export function parseRssFeed(xml: string, source: NewsSource): Article[] {
+export async function parseRssFeed(xml: string, source: NewsSource): Promise<Article[]> {
   const feed = parseRssXml(xml);
   const articles: Article[] = [];
 
@@ -220,6 +257,20 @@ export function parseRssFeed(xml: string, source: NewsSource): Article[] {
     };
 
     articles.push(article);
+  }
+
+  // For Al Jazeera, fetch images from article pages in parallel for articles without images
+  if (source.id === 'aljazeera') {
+    const articlesWithoutImages = articles.filter(a => !a.imageUrl);
+    if (articlesWithoutImages.length > 0) {
+      const imagePromises = articlesWithoutImages.map(article =>
+        fetchAlJazeeraImage(article.link)
+      );
+      const images = await Promise.all(imagePromises);
+      articlesWithoutImages.forEach((article, index) => {
+        article.imageUrl = images[index];
+      });
+    }
   }
 
   return articles;
