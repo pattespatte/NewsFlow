@@ -105,6 +105,41 @@ export const NEWS_SOURCES: NewsSource[] = [
     color: '#7C3AED',
     bgColor: '#F5F3FF',
   },
+  {
+    id: 'the-hill',
+    name: 'The Hill',
+    url: 'https://feeds.feedburner.com/thehill',
+    color: '#222222',
+    bgColor: '#F5F5F5',
+  },
+  {
+    id: 'pew-research',
+    name: 'Pew Research',
+    url: 'https://www.pewresearch.org/feed/',
+    color: '#1E3A5F',
+    bgColor: '#EFF6FF',
+  },
+  {
+    id: 'politico',
+    name: 'POLITICO',
+    url: 'https://rss.politico.com/politics-news.xml',
+    color: '#A31621',
+    bgColor: '#FEF2F2',
+  },
+  {
+    id: 'npr-politics',
+    name: 'NPR Politics',
+    url: 'https://feeds.npr.org/1014/rss.xml',
+    color: '#1E3A5F',
+    bgColor: '#EFF6FF',
+  },
+  {
+    id: 'time',
+    name: 'Time',
+    url: 'https://time.com/feed/',
+    color: '#B91C1C',
+    bgColor: '#FEF2F2',
+  },
 ];
 
 export function getSourceById(id: string): NewsSource | undefined {
