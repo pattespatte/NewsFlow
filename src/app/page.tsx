@@ -14,6 +14,10 @@ import { API_URL, STORAGE_KEYS, ALL_SOURCES_ID, ITEMS_PER_PAGE } from '@/lib/con
 import { ClientTime } from '@/components/ClientTime';
 import type { Article, RSSResponse } from '@/types/article';
 
+// Redirect GitHub Pages to Vercel (serverless API required)
+const PRODUCTION_URL = 'https://newsflow-rss-reader.vercel.app';
+const isGitHubPages = typeof window !== 'undefined' && window.location.hostname === 'pattespatte.github.io';
+
 // Local constants (deprecated - use imports from @/lib/constants)
 
 export default function Home() {
@@ -29,6 +33,16 @@ export default function Home() {
   const [displayCount, setDisplayCount] = useState(ITEMS_PER_PAGE);
 
   // Use a Set for O(1) bookmark lookups instead of Array.some() O(n)
+
+  // Redirect GitHub Pages to Vercel (serverless API required)
+  useEffect(() => {
+    if (isGitHubPages) {
+      const currentPath = window.location.pathname.replace(/\/NewsFlow\/?/, '') || '';
+      const currentSearch = window.location.search;
+      window.location.href = `${PRODUCTION_URL}/${currentPath}${currentSearch}`;
+    }
+  }, []);
+
   const bookmarkIds = useMemo(() => new Set(bookmarks.map(b => b.id)), [bookmarks]);
 
   // Load bookmarks from localStorage
