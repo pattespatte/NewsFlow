@@ -176,10 +176,7 @@
   transition-duration: 150ms;
 }
 
-/* Remove default transition from elements that need custom transitions */
-img, video, canvas {
-  transition: none;
-}
+/* Note: Inline transitions on elements will override the base transition above */
 
 /* Card hover effects */
 .card-hover {
