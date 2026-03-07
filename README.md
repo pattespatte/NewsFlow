@@ -9,6 +9,7 @@ A modern, beautiful RSS reader web application built with Next.js 16, featuring 
 ## ✨ Features
 
 ### 🌍 News Sources
+
 - **NYT** - Top Stories, World, Technology, Business feeds
 - **BBC** - World News
 - **NBC News** - Latest headlines
@@ -20,6 +21,7 @@ A modern, beautiful RSS reader web application built with Next.js 16, featuring 
 - **Wired** - Technology & Culture
 
 ### 🎨 User Experience
+
 - **Article Deduplication** - Smart URL-based deduplication prevents duplicate articles from multiple sources
 - **Search & Filter** - Full-text search across all articles with source filtering
 - **Bookmarks** - Save articles for later reading with localStorage persistence
@@ -28,6 +30,7 @@ A modern, beautiful RSS reader web application built with Next.js 16, featuring 
 - **PWA Support** - Install as a home screen app on mobile devices
 
 ### 🔧 Technical Features
+
 - **External RSS API** - Server-side RSS fetching with 5-minute caching (deployed separately)
 - **HTML Entity Decoding** - Properly handles all HTML entities including numeric ones
 - **Image Extraction** - Pulls article images from RSS feeds (media:content, enclosures, content:encoded)
@@ -54,6 +57,7 @@ Visit [http://localhost:3000](http://localhost:3000) to see your RSS reader runn
 ## 🚢 Deployment
 
 NewsFlow uses a split architecture:
+
 - **Frontend**: Static site deployed to GitHub Pages
 - **API**: Serverless RSS fetching deployed to Vercel
 
@@ -82,6 +86,7 @@ NewsFlow uses a split architecture:
 ### Step 4: Push to Deploy
 
 Push your changes to the `main` branch. The GitHub Action will automatically:
+
 1. Build the static site
 2. Deploy to GitHub Pages
 

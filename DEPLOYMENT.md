@@ -19,10 +19,10 @@ This guide walks through deploying NewsFlow RSS Reader to GitHub Pages with the 
 │  - index.html       │         │  - Caching           │
 │  - CSS, JS          │         │  - Deduplication     │
 └─────────────────────┘         └──────────────────────┘
-       https://pattespatte.github.io/NewsFlow/
+       https://YOUR_USERNAME.github.io/YOUR_REPO/
                                          │
                                          ▼
-                            https://your-api.vercel.app/api/rss
+                            https://YOUR_PROJECT.vercel.app/api/rss
                                          │
                                          ▼
                             ┌──────────────────────────┐
@@ -42,7 +42,7 @@ This guide walks through deploying NewsFlow RSS Reader to GitHub Pages with the 
 ### 1.2 Import the Repository
 
 1. Click "Add New Project" → "Import Git Repository"
-2. Find and select `pattespatte/NewsFlow`
+2. Find and select your repository
 3. **Important**: Set "Root Directory" to `api-server`
 4. Click "Import"
 
@@ -59,17 +59,17 @@ This ensures Vercel builds the API server from the correct subdirectory.
 
 The API doesn't require any environment variables. Vercel will auto-detect Next.js.
 
-### 1.4 Deploy
+### 1.5 Deploy
 
 1. Click "Deploy"
 2. Wait for the deployment to complete (~1-2 minutes)
-3. Copy your API URL (e.g., `https://newsflow-api.vercel.app`)
+3. Copy your API URL (e.g., `https://your-project.vercel.app`)
 
 ## Step 2: Configure GitHub Pages
 
 ### 2.1 Enable GitHub Actions
 
-1. Go to https://github.com/pattespatte/NewsFlow/settings/pages
+1. Go to your repository **Settings** → **Pages**
 2. Under "Build and deployment", set **Source** to **GitHub Actions**
 3. A warning may appear - this is normal, continue to next step
 
@@ -78,7 +78,7 @@ The API doesn't require any environment variables. Vercel will auto-detect Next.
 1. Go to **Settings** → **Secrets and variables** → **Actions**
 2. Click **New repository secret**
 3. **Name**: `API_URL`
-4. **Value**: Your Vercel API URL (e.g., `https://newsflow-api.vercel.app`)
+4. **Value**: Your Vercel API URL (e.g., `https://your-project.vercel.app`)
 5. Click **Add secret**
 
 ## Step 3: Deploy Frontend
@@ -102,8 +102,9 @@ git push origin main
 ### 3.3 Access Your Site
 
 Once complete, your site will be available at:
+
 ```
-https://pattespatte.github.io/NewsFlow/
+https://YOUR_USERNAME.github.io/YOUR_REPO/
 ```
 
 ## Local Development with External API
@@ -112,7 +113,7 @@ To test the production API locally:
 
 ```bash
 # Create .env.local
-echo "NEXT_PUBLIC_API_URL=https://your-api.vercel.app" > .env.local
+echo "NEXT_PUBLIC_API_URL=https://your-project.vercel.app" > .env.local
 
 # Run dev server
 bun run dev
@@ -144,14 +145,16 @@ The app will use the external API instead of the local one.
 ### CORS errors
 
 If you see CORS errors in the browser console:
+
 - Verify the API server code in `api-server/app/api/rss/route.ts` has CORS headers
 - Ensure the Vercel API deployment has completed (check Vercel dashboard)
 - Confirm the Root Directory in Vercel is set to `api-server`
 - Try redeploying the API server from Vercel dashboard
 
 To check if CORS headers are present:
+
 ```bash
-curl -I https://your-api.vercel.app/api/rss
+curl -I https://your-project.vercel.app/api/rss
 # Look for: Access-Control-Allow-Origin: *
 ```
 
