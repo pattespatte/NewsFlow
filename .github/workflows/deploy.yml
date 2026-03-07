@@ -29,6 +29,9 @@ jobs:
       - name: Install dependencies
         run: bun install
 
+      - name: Exclude API routes for static export
+        run: rm -rf src/app/api
+
       - name: Build
         run: bunx next build
         env:
