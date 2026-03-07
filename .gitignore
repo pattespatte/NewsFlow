@@ -45,6 +45,7 @@ next-env.d.ts
 local-*
 dev.log
 server.log
+api-server/
 
 # Tools
 .claude
@@ -58,3 +59,9 @@ test
 prompt
 .playwright-mcp
 .deployment-reference.md
+
+# Bun backup lock file (keep main bun.lock tracked)
+bun.lockb
+
+# Upload directory (runtime uploads)
+upload/
