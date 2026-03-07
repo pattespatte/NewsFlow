@@ -1,0 +1,6 @@
+{
+  "buildCommand": "cd api-server && npm run build",
+  "devCommand": "cd api-server && npm run dev",
+  "installCommand": "cd api-server && npm install",
+  "framework": "nextjs"
+}
