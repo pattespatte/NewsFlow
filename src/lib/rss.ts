@@ -37,6 +37,11 @@ function stripHtml(html: string): string {
 }
 
 function extractImageUrl(item: RSSItem): string | undefined {
+  // Check for <image> tag (used by CBS News and others)
+  if (item.image) {
+    return item.image;
+  }
+
   // Check for media:content
   if (item['media:content']) {
     return item['media:content'];
@@ -140,6 +145,12 @@ function parseRssXml(xml: string): RSSFeed {
       const thumbnailMatch = itemXml.match(/<media:thumbnail[^>]+url=["']([^"']+)["']/i);
       if (thumbnailMatch) {
         item['media:thumbnail'] = thumbnailMatch[1];
+      }
+
+      // Extract plain <image> tag (used by CBS News and others)
+      const imageMatch = itemXml.match(/<image><!\[CDATA\[([\s\S]*?)\]\]><\/image>|<image>([\s\S]*?)<\/image>/i);
+      if (imageMatch) {
+        item.image = (imageMatch[1] || imageMatch[2] || '').trim();
       }
 
       items.push(item);

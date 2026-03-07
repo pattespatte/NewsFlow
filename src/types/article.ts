@@ -31,7 +31,9 @@ export interface RSSItem {
     type?: string;
   };
   'media:content'?: string;
+  'media:thumbnail'?: string;
   'content:encoded'?: string;
+  image?: string;
 }
 
 export interface RSSFeed {

@@ -33,6 +33,7 @@ export interface RSSItem {
   'media:content'?: string;
   'media:thumbnail'?: string;
   'content:encoded'?: string;
+  image?: string;
 }
 
 export interface RSSFeed {
