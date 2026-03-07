@@ -46,7 +46,16 @@ This guide walks through deploying NewsFlow RSS Reader to GitHub Pages with the 
 3. **Important**: Set "Root Directory" to `api-server`
 4. Click "Import"
 
-### 1.3 Configure Environment (Optional)
+### 1.3 Configure Root Directory (Important)
+
+1. After importing, go to **Settings** → **General**
+2. Find the **Root Directory** field
+3. Set it to `api-server`
+4. Click **Save**
+
+This ensures Vercel builds the API server from the correct subdirectory.
+
+### 1.4 Configure Environment (Optional)
 
 The API doesn't require any environment variables. Vercel will auto-detect Next.js.
 
@@ -134,10 +143,17 @@ The app will use the external API instead of the local one.
 
 ### CORS errors
 
-These should not occur with the split architecture. If you see CORS errors:
-- Verify the API is deployed on Vercel
-- Check that the frontend is using the correct API_URL
-- Ensure no proxying is interfering with requests
+If you see CORS errors in the browser console:
+- Verify the API server code in `api-server/app/api/rss/route.ts` has CORS headers
+- Ensure the Vercel API deployment has completed (check Vercel dashboard)
+- Confirm the Root Directory in Vercel is set to `api-server`
+- Try redeploying the API server from Vercel dashboard
+
+To check if CORS headers are present:
+```bash
+curl -I https://your-api.vercel.app/api/rss
+# Look for: Access-Control-Allow-Origin: *
+```
 
 ## Updating Deployed App
 
