@@ -40,5 +40,5 @@ export const RSS_CONSTANTS = {
   MIN_XML_LENGTH: 100,
   MAX_ARTICLES: 150,
   CACHE_TTL: 5 * 60 * 1000, // 5 minutes
-  FETCH_TIMEOUT: 15 * 1000, // 15 seconds
+  FETCH_TIMEOUT: 10 * 1000, // 10 seconds
 } as const;

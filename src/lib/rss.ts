@@ -1,6 +1,6 @@
 import type { Article, RSSFeed, RSSItem, NewsSource } from '@/types/article';
 
-function generateId(title: string, link: string): string {
+function generateId(title: string, link: string, sourceId: string): string {
   const hash = (str: string): string => {
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
@@ -10,7 +10,8 @@ function generateId(title: string, link: string): string {
     }
     return Math.abs(hash).toString(36);
   };
-  return hash(title + link);
+  // Include sourceId to ensure uniqueness across different news sources
+  return hash(sourceId + title + link);
 }
 
 function stripHtml(html: string): string {
@@ -51,17 +52,13 @@ function stripTrackingParams(url: string): string {
   }
 }
 
-/**
- * Convert CBS News thumbnail URLs to larger image sizes
- * CBS provides 60x60 thumbnails by default, we convert to 640x360
- */
+// Convert CBS News thumbnail URLs to full-size images
+// CBS provides small thumbnails like: /thumbnail/60x60/<hash>/filename.jpg
+// Removing the thumbnail path returns the full-size image
 function convertCbsThumbnailToLarge(url: string): string {
   if (url.includes('cbsnewsstatic.com') && url.includes('/thumbnail/')) {
-    // Replace small thumbnail with larger size
-    return url
-      .replace(/\/thumbnail\/60x60\//g, '/thumbnail/640x360/')
-      .replace(/\/thumbnail\/120x120\//g, '/thumbnail/640x360/')
-      .replace(/\/thumbnail\/\d+x\d+\//g, '/thumbnail/640x360/');
+    // Remove /thumbnail/<size>/<hash>/ to get the full-size image
+    return url.replace(/\/thumbnail\/\d+x\d+\/[^/]+\//, '/');
   }
   return url;
 }
@@ -208,7 +205,7 @@ export function parseRssFeed(xml: string, source: NewsSource): Article[] {
       : '';
 
     const article: Article = {
-      id: generateId(title, item.link),
+      id: generateId(title, item.link, source.id),
       title,
       description,
       link: stripTrackingParams(item.link),
