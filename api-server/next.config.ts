@@ -1,8 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Only include the API route
-  output: "standalone",
+  // Vercel handles Next.js API routes as serverless functions automatically
 };
 
 export default nextConfig;

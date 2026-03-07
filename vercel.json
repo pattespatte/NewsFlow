@@ -1,5 +1,0 @@
-{
-  "buildCommand": "cd api-server && npm install && npm run build",
-  "outputDirectory": "api-server/.next",
-  "installCommand": "cd api-server && npm install"
-}
