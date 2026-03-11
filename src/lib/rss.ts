@@ -292,7 +292,7 @@ export async function parseRssFeed(xml: string, source: NewsSource): Promise<Art
       title,
       description,
       link: stripTrackingParams(item.link),
-      pubDate: item.pubDate || new Date().toISOString(),
+      pubDate: item.pubDate || '1970-01-01T00:00:00.000Z', // Use epoch for missing dates so they sort last
       source: {
         id: source.id,
         name: source.name,

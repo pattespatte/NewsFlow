@@ -137,7 +137,7 @@ export async function GET(request: Request) {
 
     // Convert back to array and sort by date (newest first)
     response.articles = Array.from(seenUrls.values());
-    response.articles.sort((a, b) => b.pubDate.localeCompare(a.pubDate));
+    response.articles.sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime());
 
     // Limit to max articles
     response.articles = response.articles.slice(0, MAX_ARTICLES);
