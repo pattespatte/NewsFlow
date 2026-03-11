@@ -288,7 +288,7 @@ export default function Home() {
                   variant="outline"
                   size="lg"
                   onClick={handleLoadMore}
-                  className="min-w-[200px]"
+                  className="min-w-[200px] hover:bg-muted hover:scale-105 transition-all duration-200 ease-out cursor-pointer"
                 >
                   Load More ({displayArticles.length - displayCount} remaining)
                 </Button>

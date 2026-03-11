@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { Newspaper, Bookmark, RefreshCw, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -33,7 +34,19 @@ export function Header({
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between gap-4">
           {/* Logo */}
-          <div className="flex items-center gap-3 flex-shrink-0">
+          <Link
+            href="./"
+            className="flex items-center gap-3 flex-shrink-0"
+            onClick={(e) => {
+              if (showBookmarks) {
+                e.preventDefault();
+                onToggleBookmarks();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              } else {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }
+            }}
+          >
             <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-rose-500 to-orange-500 shadow-lg shadow-rose-500/20 transition-transform duration-200 ease-out hover:scale-105">
               <Newspaper className="w-5 h-5 text-white" />
             </div>
@@ -41,7 +54,7 @@ export function Header({
               <h1 className="text-xl font-bold tracking-tight bg-gradient-to-r from-rose-600 to-orange-500 bg-clip-text text-transparent">NewsFlow</h1>
               <p className="text-xs text-muted-foreground">Your daily news companion</p>
             </div>
-          </div>
+          </Link>
 
           {/* Search Bar - Desktop */}
           <div className="hidden md:flex flex-1 max-w-md mx-4">
