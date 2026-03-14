@@ -134,6 +134,13 @@ export const NEWS_SOURCES: NewsSource[] = [
     bgColor: '#F5F5F5',
   },
   {
+    id: 'the-intercept',
+    name: 'The Intercept',
+    url: 'https://theintercept.com/feed/',
+    color: '#E63946',
+    bgColor: '#FEE2E2',
+  },
+  {
     id: 'npr-politics',
     name: 'NPR Politics',
     url: 'https://feeds.npr.org/1014/rss.xml',
