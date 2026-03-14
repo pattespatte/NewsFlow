@@ -78,6 +78,13 @@ export const NEWS_SOURCES: NewsSource[] = [
   //   bgColor: '#FEF2F2',
   // },
   {
+    id: 'the-atlantic',
+    name: 'The Atlantic',
+    url: 'https://www.theatlantic.com/feed/all/',
+    color: '#C41E3A',
+    bgColor: '#FEF2F2',
+  },
+  {
     id: 'aljazeera',
     name: 'Al Jazeera',
     url: 'https://www.aljazeera.com/xml/rss/all.xml',
