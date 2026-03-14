@@ -141,6 +141,13 @@ export const NEWS_SOURCES: NewsSource[] = [
     bgColor: '#FEE2E2',
   },
   {
+    id: 'deutsche-welle',
+    name: 'Deutsche Welle',
+    url: 'https://rss.dw.com/rdf/rss-en-all',
+    color: '#003399',
+    bgColor: '#EEF2FF',
+  },
+  {
     id: 'npr-politics',
     name: 'NPR Politics',
     url: 'https://feeds.npr.org/1014/rss.xml',
