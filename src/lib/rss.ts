@@ -124,41 +124,6 @@ async function fetchGuardianImage(articleUrl: string): Promise<string | undefine
   }
 }
 
-// Fetch CNN article page and extract the og:image
-// CNN's RSS feed images are not the correct featured images, so we need to fetch from the article page
-async function fetchCnnImage(articleUrl: string): Promise<string | undefined> {
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000);
-
-    const response = await fetch(articleUrl, {
-      headers: {
-        'Accept': 'text/html',
-        'User-Agent': 'Mozilla/5.0 (compatible; NewsFlowRSS/1.0)',
-      },
-      signal: controller.signal,
-    });
-
-    clearTimeout(timeoutId);
-
-    if (!response.ok) {
-      return undefined;
-    }
-
-    const html = await response.text();
-
-    // Extract og:image meta tag content
-    const ogImageMatch = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i);
-    if (ogImageMatch) {
-      return ogImageMatch[1].replace(/&amp;/g, '&');
-    }
-
-    return undefined;
-  } catch {
-    return undefined;
-  }
-}
-
 // Convert CBS News thumbnail URLs to full-size images
 // CBS provides small thumbnails like: /thumbnail/60x60/<hash>/filename.jpg
 // Removing the thumbnail path returns the full-size image
@@ -181,18 +146,6 @@ function convertGuardianImageToLarge(url: string): string {
   return url;
 }
 
-// Convert CNN images to larger size
-// CNN provides multiple sizes: t1-main (250x250), large-11 (300x300), video-synd-2 (640x480), super-169 (1100x619)
-// Replace with super-169 for the highest quality
-function convertCnnImageToLarge(url: string): string {
-  if (url.includes('cdn.cnn.com/cnnnext/dam/assets/')) {
-    // Replace any size suffix with super-169 for best quality
-    // Examples: -t1-main.jpg -> -super-169.jpg, -large-11.jpg -> -super-169.jpg
-    return url.replace(/-(t1-main|large-11|live-video|video-synd-2|vertical-large-gallery)\.jpg$/, '-super-169.jpg');
-  }
-  return url;
-}
-
 function extractImageUrl(item: RSSItem): string | undefined {
   // Check for <image> tag (used by CBS News and others)
   if (item.image) {
@@ -206,7 +159,7 @@ function extractImageUrl(item: RSSItem): string | undefined {
 
   // Check for media:content (only if not already found in thumbnail)
   if (item['media:content']) {
-    return convertCnnImageToLarge(convertGuardianImageToLarge(item['media:content']));
+    return convertGuardianImageToLarge(item['media:content']);
   }
 
   // Check for enclosure with image type
@@ -369,15 +322,6 @@ export async function parseRssFeed(xml: string, source: NewsSource): Promise<Art
   // For Guardian, always fetch images from article pages since RSS images are 401-protected
   if (source.id.startsWith('guardian')) {
     const imagePromises = articles.map(article => fetchGuardianImage(article.link));
-    const images = await Promise.all(imagePromises);
-    articles.forEach((article, index) => {
-      article.imageUrl = images[index];
-    });
-  }
-
-  // For CNN, always fetch images from article pages since RSS feed images are not the correct featured images
-  if (source.id === 'cnn') {
-    const imagePromises = articles.map(article => fetchCnnImage(article.link));
     const images = await Promise.all(imagePromises);
     articles.forEach((article, index) => {
       article.imageUrl = images[index];

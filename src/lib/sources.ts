@@ -69,13 +69,8 @@ export const NEWS_SOURCES: NewsSource[] = [
     color: '#003087',
     bgColor: '#F0F5FF',
   },
-  {
-    id: 'cnn',
-    name: 'CNN',
-    url: 'http://rss.cnn.com/rss/cnn_latest.rss',
-    color: '#CC0000',
-    bgColor: '#FEF2F2',
-  },
+  // CNN removed - official RSS feeds are abandoned/unmaintained (last update 2023-2024)
+  // Google News alternative shows articles ABOUT CNN, not FROM CNN, and has no images
   {
     id: 'the-atlantic',
     name: 'The Atlantic',
