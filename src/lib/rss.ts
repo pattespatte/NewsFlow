@@ -124,6 +124,41 @@ async function fetchGuardianImage(articleUrl: string): Promise<string | undefine
   }
 }
 
+// Fetch CNN article page and extract the og:image
+// CNN's RSS feed images are not the correct featured images, so we need to fetch from the article page
+async function fetchCnnImage(articleUrl: string): Promise<string | undefined> {
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+    const response = await fetch(articleUrl, {
+      headers: {
+        'Accept': 'text/html',
+        'User-Agent': 'Mozilla/5.0 (compatible; NewsFlowRSS/1.0)',
+      },
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      return undefined;
+    }
+
+    const html = await response.text();
+
+    // Extract og:image meta tag content
+    const ogImageMatch = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i);
+    if (ogImageMatch) {
+      return ogImageMatch[1].replace(/&amp;/g, '&');
+    }
+
+    return undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 // Convert CBS News thumbnail URLs to full-size images
 // CBS provides small thumbnails like: /thumbnail/60x60/<hash>/filename.jpg
 // Removing the thumbnail path returns the full-size image
@@ -334,6 +369,15 @@ export async function parseRssFeed(xml: string, source: NewsSource): Promise<Art
   // For Guardian, always fetch images from article pages since RSS images are 401-protected
   if (source.id.startsWith('guardian')) {
     const imagePromises = articles.map(article => fetchGuardianImage(article.link));
+    const images = await Promise.all(imagePromises);
+    articles.forEach((article, index) => {
+      article.imageUrl = images[index];
+    });
+  }
+
+  // For CNN, always fetch images from article pages since RSS feed images are not the correct featured images
+  if (source.id === 'cnn') {
+    const imagePromises = articles.map(article => fetchCnnImage(article.link));
     const images = await Promise.all(imagePromises);
     articles.forEach((article, index) => {
       article.imageUrl = images[index];
