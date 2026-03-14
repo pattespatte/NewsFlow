@@ -156,6 +156,13 @@ export const NEWS_SOURCES: NewsSource[] = [
     bgColor: '#EEF2FF',
   },
   {
+    id: 'foreign-policy',
+    name: 'Foreign Policy',
+    url: 'https://foreignpolicy.com/feed/',
+    color: '#1E3A5F',
+    bgColor: '#EFF6FF',
+  },
+  {
     id: 'npr-politics',
     name: 'NPR Politics',
     url: 'https://feeds.npr.org/1014/rss.xml',
