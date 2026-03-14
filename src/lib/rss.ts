@@ -146,6 +146,18 @@ function convertGuardianImageToLarge(url: string): string {
   return url;
 }
 
+// Convert CNN images to larger size
+// CNN provides multiple sizes: t1-main (250x250), large-11 (300x300), video-synd-2 (640x480), super-169 (1100x619)
+// Replace with super-169 for the highest quality
+function convertCnnImageToLarge(url: string): string {
+  if (url.includes('cdn.cnn.com/cnnnext/dam/assets/')) {
+    // Replace any size suffix with super-169 for best quality
+    // Examples: -t1-main.jpg -> -super-169.jpg, -large-11.jpg -> -super-169.jpg
+    return url.replace(/-(t1-main|large-11|live-video|video-synd-2|vertical-large-gallery)\.jpg$/, '-super-169.jpg');
+  }
+  return url;
+}
+
 function extractImageUrl(item: RSSItem): string | undefined {
   // Check for <image> tag (used by CBS News and others)
   if (item.image) {
@@ -159,7 +171,7 @@ function extractImageUrl(item: RSSItem): string | undefined {
 
   // Check for media:content (only if not already found in thumbnail)
   if (item['media:content']) {
-    return convertGuardianImageToLarge(item['media:content']);
+    return convertCnnImageToLarge(convertGuardianImageToLarge(item['media:content']));
   }
 
   // Check for enclosure with image type

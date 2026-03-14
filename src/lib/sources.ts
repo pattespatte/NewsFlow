@@ -69,14 +69,13 @@ export const NEWS_SOURCES: NewsSource[] = [
     color: '#003087',
     bgColor: '#F0F5FF',
   },
-  // CNN removed due to SSL certificate issues with their RSS feed
-  // {
-  //   id: 'cnn',
-  //   name: 'CNN',
-  //   url: 'https://rss.cnn.com/rss/cnn_topstories.rss',
-  //   color: '#CC0000',
-  //   bgColor: '#FEF2F2',
-  // },
+  {
+    id: 'cnn',
+    name: 'CNN',
+    url: 'http://rss.cnn.com/rss/cnn_latest.rss',
+    color: '#CC0000',
+    bgColor: '#FEF2F2',
+  },
   {
     id: 'the-atlantic',
     name: 'The Atlantic',
