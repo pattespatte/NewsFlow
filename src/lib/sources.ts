@@ -127,6 +127,13 @@ export const NEWS_SOURCES: NewsSource[] = [
     bgColor: '#FEF2F2',
   },
   {
+    id: 'axios',
+    name: 'Axios',
+    url: 'https://api.axios.com/feed/',
+    color: '#1A1A1A',
+    bgColor: '#F5F5F5',
+  },
+  {
     id: 'npr-politics',
     name: 'NPR Politics',
     url: 'https://feeds.npr.org/1014/rss.xml',
