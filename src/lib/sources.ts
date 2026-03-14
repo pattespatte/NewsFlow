@@ -106,6 +106,13 @@ export const NEWS_SOURCES: NewsSource[] = [
     bgColor: '#F5F3FF',
   },
   {
+    id: 'ars-technica',
+    name: 'Ars Technica',
+    url: 'https://feeds.arstechnica.com/arstechnica/index',
+    color: '#FF4E00',
+    bgColor: '#FFF3ED',
+  },
+  {
     id: 'the-hill',
     name: 'The Hill',
     url: 'https://thehill.com/feed/',
