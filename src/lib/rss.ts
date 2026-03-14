@@ -52,8 +52,12 @@ function stripTrackingParams(url: string): string {
   }
 }
 
-// Fetch Al Jazeera article page and extract the og:image
-async function fetchAlJazeeraImage(articleUrl: string): Promise<string | undefined> {
+// Generic function to fetch og:image from article page
+// Used by Al Jazeera and Guardian since their RSS feed images are protected/missing
+async function fetchOgImage(
+  articleUrl: string,
+  cleanupFn?: (url: string) => string
+): Promise<string | undefined> {
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 5000);
@@ -78,44 +82,10 @@ async function fetchAlJazeeraImage(articleUrl: string): Promise<string | undefin
     const ogImageMatch = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i);
     if (ogImageMatch) {
       let imageUrl = ogImageMatch[1].replace(/&amp;/g, '&');
-      // Remove resize query parameters to get the original image
-      imageUrl = imageUrl.replace(/\?resize=\d+%2C\d+$/, '');
+      if (cleanupFn) {
+        imageUrl = cleanupFn(imageUrl);
+      }
       return imageUrl;
-    }
-
-    return undefined;
-  } catch {
-    return undefined;
-  }
-}
-
-// Fetch Guardian article page and extract the og:image
-// Guardian's RSS feed images are protected (401), so we need to fetch from the article page
-async function fetchGuardianImage(articleUrl: string): Promise<string | undefined> {
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000);
-
-    const response = await fetch(articleUrl, {
-      headers: {
-        'Accept': 'text/html',
-        'User-Agent': 'Mozilla/5.0 (compatible; NewsFlowRSS/1.0)',
-      },
-      signal: controller.signal,
-    });
-
-    clearTimeout(timeoutId);
-
-    if (!response.ok) {
-      return undefined;
-    }
-
-    const html = await response.text();
-
-    // Extract og:image meta tag content
-    const ogImageMatch = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i);
-    if (ogImageMatch) {
-      return ogImageMatch[1].replace(/&amp;/g, '&');
     }
 
     return undefined;
@@ -305,12 +275,12 @@ export async function parseRssFeed(xml: string, source: NewsSource): Promise<Art
     articles.push(article);
   }
 
-  // For Al Jazeera, fetch images from article pages in parallel for articles without images
+  // For Al Jazeera, fetch images from article pages for articles without images
   if (source.id === 'aljazeera') {
     const articlesWithoutImages = articles.filter(a => !a.imageUrl);
     if (articlesWithoutImages.length > 0) {
       const imagePromises = articlesWithoutImages.map(article =>
-        fetchAlJazeeraImage(article.link)
+        fetchOgImage(article.link, (url) => url.replace(/\?resize=\d+%2C\d+$/, ''))
       );
       const images = await Promise.all(imagePromises);
       articlesWithoutImages.forEach((article, index) => {
@@ -319,13 +289,19 @@ export async function parseRssFeed(xml: string, source: NewsSource): Promise<Art
     }
   }
 
-  // For Guardian, always fetch images from article pages since RSS images are 401-protected
+  // For Guardian, fetch images from article pages for articles without images
+  // RSS feed images are protected (401), so we need to fetch from the article page
   if (source.id.startsWith('guardian')) {
-    const imagePromises = articles.map(article => fetchGuardianImage(article.link));
-    const images = await Promise.all(imagePromises);
-    articles.forEach((article, index) => {
-      article.imageUrl = images[index];
-    });
+    const articlesWithoutImages = articles.filter(a => !a.imageUrl);
+    if (articlesWithoutImages.length > 0) {
+      const imagePromises = articlesWithoutImages.map(article =>
+        fetchOgImage(article.link)
+      );
+      const images = await Promise.all(imagePromises);
+      articlesWithoutImages.forEach((article, index) => {
+        article.imageUrl = images[index];
+      });
+    }
   }
 
   return articles;
