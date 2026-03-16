@@ -116,20 +116,35 @@ function convertGuardianImageToLarge(url: string): string {
   return url;
 }
 
-function extractImageUrl(item: RSSItem): string | undefined {
+// Convert BBC thumbnail URLs to full-size images
+// BBC provides small thumbnails like: /ace/standard/240/...
+// Replace width parameter with larger size for better quality
+function convertBbcThumbnailToLarge(url: string): string {
+  if (url.includes('ichef.bbci.co.uk') || url.includes('bbci.co.uk')) {
+    // BBC uses format: /ace/standard/{width}/... or /news/{width}/...
+    // Replace small widths (240, 512) with 976 for better quality
+    return url.replace(/\/(ace\/standard|news)\/\d+\//, '/$1/976/');
+  }
+  return url;
+}
+
+function extractImageUrl(item: RSSItem, sourceId: string): string | undefined {
   // Check for <image> tag (used by CBS News and others)
   if (item.image) {
-    return convertCbsThumbnailToLarge(item.image);
+    const imageUrl = convertCbsThumbnailToLarge(item.image);
+    return sourceId.startsWith('bbc-') ? convertBbcThumbnailToLarge(imageUrl) : imageUrl;
   }
 
   // Check for media:thumbnail (images only, media:content can be video)
   if (item['media:thumbnail']) {
-    return convertGuardianImageToLarge(item['media:thumbnail']);
+    const imageUrl = convertGuardianImageToLarge(item['media:thumbnail']);
+    return sourceId.startsWith('bbc-') ? convertBbcThumbnailToLarge(imageUrl) : imageUrl;
   }
 
   // Check for media:content (only if not already found in thumbnail)
   if (item['media:content']) {
-    return convertGuardianImageToLarge(item['media:content']);
+    const imageUrl = convertGuardianImageToLarge(item['media:content']);
+    return sourceId.startsWith('bbc-') ? convertBbcThumbnailToLarge(imageUrl) : imageUrl;
   }
 
   // Check for enclosure with image type
@@ -269,7 +284,7 @@ export async function parseRssFeed(xml: string, source: NewsSource): Promise<Art
         color: source.color,
         bgColor: source.bgColor,
       },
-      imageUrl: extractImageUrl(item),
+      imageUrl: extractImageUrl(item, source.id),
     };
 
     articles.push(article);
