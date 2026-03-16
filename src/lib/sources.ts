@@ -176,13 +176,7 @@ export const NEWS_SOURCES: NewsSource[] = [
     color: '#B91C1C',
     bgColor: '#FEF2F2',
   },
-  {
-    id: 'the-information',
-    name: 'The Information',
-    url: 'https://www.theinformation.com/feed',
-    color: '#0066CC',
-    bgColor: '#F0F7FF',
-  },
+  // The Information - RSS feed blocked server-side (works in browser but requires session/cookies)
 ];
 
 export function getSourceById(id: string): NewsSource | undefined {
