@@ -110,8 +110,10 @@ function convertCbsThumbnailToLarge(url: string): string {
 // Replace with larger width for better quality
 function convertGuardianImageToLarge(url: string): string {
   if (url.includes('i.guim.co.uk')) {
-    // Replace any width parameter with width=700 for better quality
-    return url.replace(/width=\d+/, 'width=700');
+    // Decode HTML entities (&amp; -> &) so width replacement works
+    const decoded = url.replace(/&amp;/g, '&');
+    // Replace any width parameter with width=1400 for best quality
+    return decoded.replace(/width=\d+/, 'width=1400');
   }
   return url;
 }
@@ -304,19 +306,18 @@ export async function parseRssFeed(xml: string, source: NewsSource): Promise<Art
     }
   }
 
-  // For Guardian, fetch images from article pages for articles without images
+  // For Guardian, fetch images from article pages for ALL articles
   // RSS feed images are protected (401), so we need to fetch from the article page
   if (source.id.startsWith('guardian')) {
-    const articlesWithoutImages = articles.filter(a => !a.imageUrl);
-    if (articlesWithoutImages.length > 0) {
-      const imagePromises = articlesWithoutImages.map(article =>
-        fetchOgImage(article.link)
-      );
-      const images = await Promise.all(imagePromises);
-      articlesWithoutImages.forEach((article, index) => {
+    const imagePromises = articles.map(article =>
+      fetchOgImage(article.link)
+    );
+    const images = await Promise.all(imagePromises);
+    articles.forEach((article, index) => {
+      if (images[index]) {
         article.imageUrl = images[index];
-      });
-    }
+      }
+    });
   }
 
   return articles;
