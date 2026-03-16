@@ -54,11 +54,27 @@ async function fetchFeed(url: string, sourceId: string): Promise<{ articles: Art
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT);
 
+    // Use more browser-like headers for The Information which blocks bot requests
+    const headers: Record<string, string> = sourceId === 'the-information'
+      ? {
+          'Accept': 'application/atom+xml, application/rss+xml, application/xml, text/xml, */*',
+          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36',
+          'Accept-Language': 'en-US,en;q=0.9',
+          'Accept-Encoding': 'gzip, deflate, br',
+          'Connection': 'keep-alive',
+          'Upgrade-Insecure-Requests': '1',
+          'Sec-Fetch-Dest': 'document',
+          'Sec-Fetch-Mode': 'navigate',
+          'Sec-Fetch-Site': 'none',
+          'Cache-Control': 'max-age=0',
+        }
+      : {
+          'Accept': 'application/rss+xml, application/xml, text/xml, */*',
+          'User-Agent': 'Mozilla/5.0 (compatible; NewsFlowRSS/1.0)',
+        };
+
     const response = await fetch(url, {
-      headers: {
-        'Accept': 'application/rss+xml, application/xml, text/xml, */*',
-        'User-Agent': 'Mozilla/5.0 (compatible; NewsFlowRSS/1.0)',
-      },
+      headers,
       signal: controller.signal,
     });
 
