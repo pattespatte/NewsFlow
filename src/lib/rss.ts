@@ -79,7 +79,12 @@ async function fetchOgImage(
     const html = await response.text();
 
     // Extract og:image meta tag content
-    const ogImageMatch = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i);
+    // Try pattern 1: <meta property="og:image" content="..."> (most sites)
+    let ogImageMatch = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i);
+    // Try pattern 2: <meta content="..." property="og:image"> (Deutsche Welle)
+    if (!ogImageMatch) {
+      ogImageMatch = html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i);
+    }
     if (ogImageMatch) {
       let imageUrl = ogImageMatch[1].replace(/&amp;/g, '&');
       if (cleanupFn) {
@@ -309,6 +314,20 @@ export async function parseRssFeed(xml: string, source: NewsSource): Promise<Art
   // For Guardian, fetch images from article pages for ALL articles
   // RSS feed images are protected (401), so we need to fetch from the article page
   if (source.id.startsWith('guardian')) {
+    const imagePromises = articles.map(article =>
+      fetchOgImage(article.link)
+    );
+    const images = await Promise.all(imagePromises);
+    articles.forEach((article, index) => {
+      if (images[index]) {
+        article.imageUrl = images[index];
+      }
+    });
+  }
+
+  // For Deutsche Welle, fetch images from article pages for ALL articles
+  // RSS feed (RDF format) doesn't include images, need to fetch og:image
+  if (source.id.startsWith('deutsche-welle')) {
     const imagePromises = articles.map(article =>
       fetchOgImage(article.link)
     );
