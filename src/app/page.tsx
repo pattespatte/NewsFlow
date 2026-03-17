@@ -74,7 +74,8 @@ export default function Home() {
 
     try {
       const source = sourceId || activeSource;
-      const url = `${API_URL}/rss?source=${source === ALL_SOURCES_ID ? ALL_SOURCES_ID : source}`;
+      // Add cache-busting timestamp to ensure fresh data on each request
+      const url = `${API_URL}/rss?source=${source === ALL_SOURCES_ID ? ALL_SOURCES_ID : source}&_t=${Date.now()}`;
 
       const response = await fetch(url);
       const data: RSSResponse = await response.json();
