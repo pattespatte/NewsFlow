@@ -37,6 +37,11 @@ function setCachedFeed(url: string, data: { articles: Article[]; error?: string 
   });
 }
 
+// Helper to create error response with timing
+function createErrorResponse(error: string, timing: number): { articles: Article[]; error: string; timing: number } {
+  return { articles: [], error, timing };
+}
+
 async function fetchFeed(url: string, sourceId: string): Promise<{ articles: Article[]; error?: string; timing?: number }> {
   const startTime = Date.now();
   // Validate source before fetching
@@ -66,16 +71,18 @@ async function fetchFeed(url: string, sourceId: string): Promise<{ articles: Art
     clearTimeout(timeoutId);
 
     if (!response.ok) {
-      const errorData = { articles: [], error: `HTTP ${response.status}`, timing: Date.now() - startTime };
-      setCachedFeed(url, errorData);
+      const timing = Date.now() - startTime;
+      const errorData = createErrorResponse(`HTTP ${response.status}`, timing);
+      setCachedFeed(url, { articles: [], error: errorData.error }); // Cache without timing
       return errorData;
     }
 
     const xml = await response.text();
 
     if (!xml || xml.length < MIN_XML_LENGTH) {
-      const errorData = { articles: [], error: 'Empty response', timing: Date.now() - startTime };
-      setCachedFeed(url, errorData);
+      const timing = Date.now() - startTime;
+      const errorData = createErrorResponse('Empty response', timing);
+      setCachedFeed(url, { articles: [], error: errorData.error }); // Cache without timing
       return errorData;
     }
 
@@ -90,8 +97,8 @@ async function fetchFeed(url: string, sourceId: string): Promise<{ articles: Art
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     const timing = Date.now() - startTime;
-    const errorData = { articles: [], error: message, timing };
-    setCachedFeed(url, errorData);
+    const errorData = createErrorResponse(message, timing);
+    setCachedFeed(url, { articles: [], error: errorData.error }); // Cache without timing
     return errorData;
   }
 }
@@ -147,11 +154,15 @@ export async function GET(request: Request) {
     }
 
     // Convert back to array and sort by date (newest first)
-    response.articles = Array.from(seenUrls.values());
-    response.articles.sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime());
+    // Parse dates once to avoid creating Date objects in every comparison
+    const articlesWithTimestamp = Array.from(seenUrls.values()).map(article => ({
+      ...article,
+      _timestamp: new Date(article.pubDate).getTime(),
+    }));
+    articlesWithTimestamp.sort((a, b) => b._timestamp - a._timestamp);
 
-    // Limit to max articles
-    response.articles = response.articles.slice(0, MAX_ARTICLES);
+    // Remove the temporary timestamp field and limit to max articles
+    response.articles = articlesWithTimestamp.map(({ _timestamp, ...article }) => article).slice(0, MAX_ARTICLES);
 
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to fetch feeds';

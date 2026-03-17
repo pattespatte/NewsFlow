@@ -10,8 +10,9 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle, Newspaper, RefreshCw, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 import { matchesSearch } from '@/lib/utils';
-import { API_URL, STORAGE_KEYS, ALL_SOURCES_ID, ITEMS_PER_PAGE } from '@/lib/constants';
+import { API_URL, STORAGE_KEYS, ALL_SOURCES_ID, ITEMS_PER_PAGE, TIMING_THRESHOLDS, TIMING_COLORS } from '@/lib/constants';
 import { ClientTime } from '@/components/ClientTime';
 import type { Article, RSSResponse } from '@/types/article';
 
@@ -73,12 +74,9 @@ export default function Home() {
 
     try {
       const source = sourceId || activeSource;
-      // Add cache-busting timestamp to prevent browser caching issues
-      const url = `${API_URL}/rss?source=${source === ALL_SOURCES_ID ? ALL_SOURCES_ID : source}&_t=${Date.now()}`;
+      const url = `${API_URL}/rss?source=${source === ALL_SOURCES_ID ? ALL_SOURCES_ID : source}`;
 
-      const response = await fetch(url, {
-        cache: 'no-store',
-      });
+      const response = await fetch(url);
       const data: RSSResponse = await response.json();
 
       setArticles(data.articles);
@@ -180,6 +178,16 @@ export default function Home() {
     return displayArticles.slice(0, displayCount);
   }, [displayArticles, displayCount]);
 
+  // Filter slow sources for stats bar display (memoized to avoid re-filtering on every render)
+  const slowSources = useMemo(() => {
+    return sourceTimings.filter(t => t.timing > TIMING_THRESHOLDS.FAST);
+  }, [sourceTimings]);
+
+  // Sort timings by slowest first for dialog (memoized to avoid re-sorting on every render)
+  const sortedTimings = useMemo(() => {
+    return [...sourceTimings].sort((a, b) => b.timing - a.timing);
+  }, [sourceTimings]);
+
   // Has more articles to load
   const hasMore = displayCount < displayArticles.length;
 
@@ -246,7 +254,10 @@ export default function Home() {
                     className="text-xs text-muted-foreground hidden sm:flex items-center gap-1 hover:text-foreground transition-colors cursor-pointer truncate max-w-[50%]"
                   >
                     <Clock className="w-3 h-3" />
-                    {sourceTimings.filter(t => t.timing > 500).map(t => `${t.sourceName}: ${t.timing}ms`).join(' • ') || <span className="text-green-600 dark:text-green-400">All sources fast</span>}
+                    {slowSources.length > 0
+                      ? slowSources.map(t => `${t.sourceName}: ${t.timing}ms`).join(' • ')
+                      : <span className={TIMING_COLORS.FAST}>All sources fast</span>
+                    }
                   </button>
                 )}
               </div>
@@ -352,28 +363,33 @@ export default function Home() {
             </DialogDescription>
           </DialogHeader>
           <div className="max-h-[60vh] overflow-y-auto">
-            <table className="w-full text-sm">
-              <thead className="sticky top-0 bg-background border-b">
-                <tr>
-                  <th className="text-left py-2 font-medium">Source</th>
-                  <th className="text-right py-2 font-medium">Time</th>
-                  <th className="text-right py-2 font-medium">Articles</th>
-                </tr>
-              </thead>
-              <tbody>
-                {sourceTimings
-                  .sort((a, b) => b.timing - a.timing)
-                  .map((t) => (
-                    <tr key={t.sourceId} className="border-b hover:bg-muted/50">
-                      <td className="py-2">{t.sourceName}</td>
-                      <td className={`text-right py-2 ${t.timing > 1000 ? 'text-red-500 font-medium' : t.timing > 500 ? 'text-yellow-600 dark:text-yellow-400' : 'text-green-600 dark:text-green-400'}`}>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-left">Source</TableHead>
+                  <TableHead className="text-right">Time</TableHead>
+                  <TableHead className="text-right">Articles</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {sortedTimings.map((t) => {
+                  const getTimingColor = () => {
+                    if (t.timing > TIMING_THRESHOLDS.MEDIUM) return TIMING_COLORS.SLOW;
+                    if (t.timing > TIMING_THRESHOLDS.FAST) return TIMING_COLORS.MEDIUM;
+                    return TIMING_COLORS.FAST;
+                  };
+                  return (
+                    <TableRow key={t.sourceId}>
+                      <TableCell>{t.sourceName}</TableCell>
+                      <TableCell className={`text-right ${getTimingColor()}`}>
                         {t.timing}ms
-                      </td>
-                      <td className="text-right py-2 text-muted-foreground">{t.articleCount}</td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
+                      </TableCell>
+                      <TableCell className="text-right text-muted-foreground">{t.articleCount}</TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
           </div>
         </DialogContent>
       </Dialog>

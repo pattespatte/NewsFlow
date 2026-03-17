@@ -42,3 +42,17 @@ export const RSS_CONSTANTS = {
   CACHE_TTL: 5 * 60 * 1000, // 5 minutes
   FETCH_TIMEOUT: 10 * 1000, // 10 seconds
 } as const;
+
+// Timing performance thresholds (in milliseconds)
+export const TIMING_THRESHOLDS = {
+  FAST: 500,    // Green - cached or very fast
+  MEDIUM: 1000, // Yellow - acceptable but slow
+  SLOW: Infinity, // Red - too slow, indicates problem
+} as const;
+
+// Timing color classes for display
+export const TIMING_COLORS = {
+  FAST: 'text-green-600 dark:text-green-400',
+  MEDIUM: 'text-yellow-600 dark:text-yellow-400',
+  SLOW: 'text-red-500 font-medium',
+} as const;
