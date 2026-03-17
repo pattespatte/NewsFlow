@@ -46,4 +46,5 @@ export interface RSSResponse {
   articles: Article[];
   errors: string[];
   lastUpdated: string;
+  sourceTimings?: { sourceId: string; sourceName: string; timing: number; articleCount: number }[];
 }

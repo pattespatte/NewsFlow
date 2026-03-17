@@ -7,8 +7,9 @@ import { SourceTabs } from '@/components/SourceTabs';
 import { ArticleCard } from '@/components/ArticleCard';
 import { LoadingSkeleton } from '@/components/LoadingSkeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle, Newspaper, RefreshCw } from 'lucide-react';
+import { AlertCircle, Newspaper, RefreshCw, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { matchesSearch } from '@/lib/utils';
 import { API_URL, STORAGE_KEYS, ALL_SOURCES_ID, ITEMS_PER_PAGE } from '@/lib/constants';
 import { ClientTime } from '@/components/ClientTime';
@@ -31,6 +32,8 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
   const [displayCount, setDisplayCount] = useState(ITEMS_PER_PAGE);
+  const [sourceTimings, setSourceTimings] = useState<{ sourceId: string; sourceName: string; timing: number; articleCount: number }[]>([]);
+  const [showTimingDialog, setShowTimingDialog] = useState(false);
 
   // Use a Set for O(1) bookmark lookups instead of Array.some() O(n)
 
@@ -70,14 +73,18 @@ export default function Home() {
 
     try {
       const source = sourceId || activeSource;
-      const url = `${API_URL}/rss?source=${source === ALL_SOURCES_ID ? ALL_SOURCES_ID : source}`;
+      // Add cache-busting timestamp to prevent browser caching issues
+      const url = `${API_URL}/rss?source=${source === ALL_SOURCES_ID ? ALL_SOURCES_ID : source}&_t=${Date.now()}`;
 
-      const response = await fetch(url);
+      const response = await fetch(url, {
+        cache: 'no-store',
+      });
       const data: RSSResponse = await response.json();
 
       setArticles(data.articles);
       setErrors(data.errors);
       setLastUpdated(data.lastUpdated);
+      setSourceTimings(data.sourceTimings || []);
     } catch (error) {
       setErrors(['Failed to fetch news. Please try again.']);
     } finally {
@@ -225,7 +232,7 @@ export default function Home() {
           <>
             {/* Stats Bar */}
             {!showBookmarks && displayArticles.length > 0 && (
-              <div className="px-4 py-3 flex items-center justify-between border-b bg-muted/20">
+              <div className="px-4 py-3 flex items-center justify-between border-b bg-muted/20 gap-4">
                 <p className="text-sm text-muted-foreground">
                   {searchQuery ? (
                     <>Found <span className="font-medium text-foreground">{displayArticles.length}</span> articles for "{searchQuery}"</>
@@ -233,6 +240,15 @@ export default function Home() {
                     <><span className="font-medium text-foreground">{displayArticles.length}</span> articles</>
                   )}
                 </p>
+                {sourceTimings.length > 0 && (
+                  <button
+                    onClick={() => setShowTimingDialog(true)}
+                    className="text-xs text-muted-foreground hidden sm:flex items-center gap-1 hover:text-foreground transition-colors cursor-pointer truncate max-w-[50%]"
+                  >
+                    <Clock className="w-3 h-3" />
+                    {sourceTimings.filter(t => t.timing > 500).map(t => `${t.sourceName}: ${t.timing}ms`).join(' • ') || <span className="text-green-600 dark:text-green-400">All sources fast</span>}
+                  </button>
+                )}
               </div>
             )}
 
@@ -322,6 +338,45 @@ export default function Home() {
           </div>
         </div>
       </footer>
+
+      {/* Source Timings Dialog */}
+      <Dialog open={showTimingDialog} onOpenChange={setShowTimingDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Clock className="w-5 h-5" />
+              Source Performance
+            </DialogTitle>
+            <DialogDescription>
+              Time taken to fetch each news source. Cached sources show 0ms.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[60vh] overflow-y-auto">
+            <table className="w-full text-sm">
+              <thead className="sticky top-0 bg-background border-b">
+                <tr>
+                  <th className="text-left py-2 font-medium">Source</th>
+                  <th className="text-right py-2 font-medium">Time</th>
+                  <th className="text-right py-2 font-medium">Articles</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sourceTimings
+                  .sort((a, b) => b.timing - a.timing)
+                  .map((t) => (
+                    <tr key={t.sourceId} className="border-b hover:bg-muted/50">
+                      <td className="py-2">{t.sourceName}</td>
+                      <td className={`text-right py-2 ${t.timing > 1000 ? 'text-red-500 font-medium' : t.timing > 500 ? 'text-yellow-600 dark:text-yellow-400' : 'text-green-600 dark:text-green-400'}`}>
+                        {t.timing}ms
+                      </td>
+                      <td className="text-right py-2 text-muted-foreground">{t.articleCount}</td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

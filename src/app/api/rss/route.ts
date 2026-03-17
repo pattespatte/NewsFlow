@@ -37,17 +37,18 @@ function setCachedFeed(url: string, data: { articles: Article[]; error?: string 
   });
 }
 
-async function fetchFeed(url: string, sourceId: string): Promise<{ articles: Article[]; error?: string }> {
+async function fetchFeed(url: string, sourceId: string): Promise<{ articles: Article[]; error?: string; timing?: number }> {
+  const startTime = Date.now();
   // Validate source before fetching
   const source = NEWS_SOURCES.find(s => s.id === sourceId);
   if (!source) {
-    return { articles: [], error: 'Unknown source' };
+    return { articles: [], error: 'Unknown source', timing: 0 };
   }
 
   // Check cache first
   const cached = getCachedFeed(url);
   if (cached) {
-    return cached.data;
+    return { ...cached.data, timing: Date.now() - startTime };
   }
 
   try {
@@ -65,7 +66,7 @@ async function fetchFeed(url: string, sourceId: string): Promise<{ articles: Art
     clearTimeout(timeoutId);
 
     if (!response.ok) {
-      const errorData = { articles: [], error: `HTTP ${response.status}` };
+      const errorData = { articles: [], error: `HTTP ${response.status}`, timing: Date.now() - startTime };
       setCachedFeed(url, errorData);
       return errorData;
     }
@@ -73,21 +74,23 @@ async function fetchFeed(url: string, sourceId: string): Promise<{ articles: Art
     const xml = await response.text();
 
     if (!xml || xml.length < MIN_XML_LENGTH) {
-      const errorData = { articles: [], error: 'Empty response' };
+      const errorData = { articles: [], error: 'Empty response', timing: Date.now() - startTime };
       setCachedFeed(url, errorData);
       return errorData;
     }
 
     const articles = await parseRssFeed(xml, source);
-    const result = { articles };
+    const timing = Date.now() - startTime;
+    const result = { articles, timing };
 
-    // Cache the result
-    setCachedFeed(url, result);
+    // Cache the result (without timing so we don't cache stale timing)
+    setCachedFeed(url, { articles });
 
     return result;
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
-    const errorData = { articles: [], error: message };
+    const timing = Date.now() - startTime;
+    const errorData = { articles: [], error: message, timing };
     setCachedFeed(url, errorData);
     return errorData;
   }
@@ -113,22 +116,30 @@ export async function GET(request: Request) {
     return NextResponse.json(response);
   }
 
-  // Fetch all feeds in parallel
+  // Fetch all feeds in parallel and collect timing info
   const fetchPromises = sourcesToFetch.map(async (source) => {
     const result = await fetchFeed(source.url, source.id);
     if (result.error) {
       response.errors.push(`${source.name}: ${result.error}`);
     }
-    return result.articles;
+    return { source, result };
   });
 
   try {
     const results = await Promise.all(fetchPromises);
 
+    // Collect source timing info
+    response.sourceTimings = results.map(({ source, result }) => ({
+      sourceId: source.id,
+      sourceName: source.name,
+      timing: result.timing || 0,
+      articleCount: result.articles.length,
+    }));
+
     // Combine all articles and deduplicate by URL
     const seenUrls = new Map<string, Article>();
-    for (const articles of results) {
-      for (const article of articles) {
+    for (const { result } of results) {
+      for (const article of result.articles) {
         if (!seenUrls.has(article.link)) {
           seenUrls.set(article.link, article);
         }
@@ -148,9 +159,11 @@ export async function GET(request: Request) {
   }
 
   // Set cache and CORS headers
+  // Disable browser caching to prevent empty responses from being cached
+  // Server-side in-memory cache is still active
   return NextResponse.json(response, {
     headers: {
-      'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=150',
+      'Cache-Control': 'no-store, no-cache, must-revalidate',
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type',
