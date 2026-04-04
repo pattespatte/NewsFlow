@@ -12,8 +12,8 @@ This guide walks through deploying NewsFlow RSS Reader to GitHub Pages with the 
 
 ```
 ┌─────────────────────┐         ┌──────────────────────┐
-│   GitHub Pages      │         │   Vercel API         │
-│   (Static Site)     │◄────────┤   (RSS Fetching)     │
+│   GitHub Pages      │         │   Vercel             │
+│   (Static Site)     │◄────────┤   (RSS API)          │
 │                     │         │                      │
 │  - Frontend assets  │         │  - /api/rss endpoint │
 │  - index.html       │         │  - Caching           │
@@ -31,7 +31,9 @@ This guide walks through deploying NewsFlow RSS Reader to GitHub Pages with the 
                             └──────────────────────────┘
 ```
 
-## Step 1: Deploy API to Vercel
+## Step 1: Deploy to Vercel
+
+The RSS API is built into the main Next.js app at `src/app/api/rss/route.ts`.
 
 ### 1.1 Connect Vercel to GitHub
 
@@ -43,23 +45,9 @@ This guide walks through deploying NewsFlow RSS Reader to GitHub Pages with the 
 
 1. Click "Add New Project" → "Import Git Repository"
 2. Find and select your repository
-3. **Important**: Set "Root Directory" to `api-server`
-4. Click "Import"
+3. Click "Import" (root directory stays as default `.`)
 
-### 1.3 Configure Root Directory (Important)
-
-1. After importing, go to **Settings** → **General**
-2. Find the **Root Directory** field
-3. Set it to `api-server`
-4. Click **Save**
-
-This ensures Vercel builds the API server from the correct subdirectory.
-
-### 1.4 Configure Environment (Optional)
-
-The API doesn't require any environment variables. Vercel will auto-detect Next.js.
-
-### 1.5 Deploy
+### 1.3 Deploy
 
 1. Click "Deploy"
 2. Wait for the deployment to complete (~1-2 minutes)
@@ -71,7 +59,6 @@ The API doesn't require any environment variables. Vercel will auto-detect Next.
 
 1. Go to your repository **Settings** → **Pages**
 2. Under "Build and deployment", set **Source** to **GitHub Actions**
-3. A warning may appear - this is normal, continue to next step
 
 ### 2.2 Add API URL Secret
 
@@ -83,43 +70,22 @@ The API doesn't require any environment variables. Vercel will auto-detect Next.
 
 ## Step 3: Deploy Frontend
 
-### 3.1 Push Changes
+The `.github/workflows/deploy.yml` workflow runs automatically on every push to `main`. It strips the API routes before building the static export.
 
-The `.github/workflows/deploy.yml` workflow will automatically run on every push to `main`:
-
-```bash
-git add .
-git commit -m "Configure GitHub Pages deployment"
-git push origin main
-```
-
-### 3.2 Monitor Deployment
-
-1. Go to the **Actions** tab in your repository
-2. Click on the "Deploy to GitHub Pages" workflow
-3. Wait for the workflow to complete (~2-3 minutes)
-
-### 3.3 Access Your Site
-
-Once complete, your site will be available at:
+### Access Your Site
 
 ```
 https://YOUR_USERNAME.github.io/YOUR_REPO/
 ```
 
-## Local Development with External API
+## Local Development
 
-To test the production API locally:
+The app uses the local API by default (`/api/rss`). To test with the production API:
 
 ```bash
-# Create .env.local
 echo "NEXT_PUBLIC_API_URL=https://your-project.vercel.app" > .env.local
-
-# Run dev server
 bun run dev
 ```
-
-The app will use the external API instead of the local one.
 
 ## Troubleshooting
 
@@ -127,7 +93,6 @@ The app will use the external API instead of the local one.
 
 - Verify the Vercel deployment completed successfully
 - Check the API URL in GitHub Actions secrets matches your Vercel URL
-- Ensure the root directory on Vercel is set to `api-server`
 
 ### GitHub Pages shows 404
 
@@ -139,65 +104,18 @@ The app will use the external API instead of the local one.
 
 - Open browser DevTools → Network tab
 - Check if `/api/rss` requests are being made
-- Verify the API URL is correct (should be your Vercel URL)
-- Check the API deployment logs on Vercel
+- Verify the API URL is correct
 
 ### CORS errors
-
-If you see CORS errors in the browser console:
-
-- Verify the API server code in `api-server/app/api/rss/route.ts` has CORS headers
-- Ensure the Vercel API deployment has completed (check Vercel dashboard)
-- Confirm the Root Directory in Vercel is set to `api-server`
-- Try redeploying the API server from Vercel dashboard
-
-To check if CORS headers are present:
 
 ```bash
 curl -I https://your-project.vercel.app/api/rss
 # Look for: Access-Control-Allow-Origin: *
 ```
 
-## Updating Deployed App
-
-### Update Frontend
-
-1. Make changes to the code
-2. Commit and push to `main` branch
-3. GitHub Actions will automatically redeploy
-
-### Update API
-
-1. Make changes to files in `api-server/`
-2. Commit and push to `main` branch
-3. Vercel will automatically redeploy
-
-### Update Both
-
-1. Make changes
-2. Commit and push
-3. Both GitHub Actions and Vercel will deploy simultaneously
-
 ## Costs
 
 - **GitHub Pages**: Free (static hosting)
-- **Vercel**: Free tier includes:
-  - 100GB bandwidth per month
-  - Serverless Function executions
-  - SSL certificate
-  - CDN distribution
+- **Vercel**: Free tier includes 100GB bandwidth/month, serverless functions, SSL, CDN
 
 Total cost: **$0/month**
-
-## Monitoring
-
-### GitHub Pages
-
-- Check the **Actions** tab for deployment status
-- View **Settings** → **Pages** for deployment history
-
-### Vercel
-
-- Go to your Vercel dashboard
-- View project for real-time logs
-- Analytics for request counts and response times
