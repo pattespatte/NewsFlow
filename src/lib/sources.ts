@@ -176,6 +176,13 @@ export const NEWS_SOURCES: NewsSource[] = [
     color: '#B91C1C',
     bgColor: '#FEF2F2',
   },
+  {
+    id: 'independent-world',
+    name: 'Independent World',
+    url: 'https://www.independent.co.uk/news/world/rss',
+    color: '#E8175D',
+    bgColor: '#FDF2F8',
+  },
   // The Information - RSS feed blocked server-side (works in browser but requires session/cookies)
 ];
 
