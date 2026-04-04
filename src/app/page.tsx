@@ -13,8 +13,14 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 import { matchesSearch } from '@/lib/utils';
 import { API_URL, STORAGE_KEYS, ALL_SOURCES_ID, ITEMS_PER_PAGE, TIMING_THRESHOLDS, TIMING_COLORS } from '@/lib/constants';
+
+function getTimingColor(timing: number): string {
+  if (timing > TIMING_THRESHOLDS.MEDIUM) return TIMING_COLORS.SLOW;
+  if (timing > TIMING_THRESHOLDS.FAST) return TIMING_COLORS.MEDIUM;
+  return TIMING_COLORS.FAST;
+}
 import { ClientTime } from '@/components/ClientTime';
-import type { Article, RSSResponse } from '@/types/article';
+import type { Article, RSSResponse, SourceTiming } from '@/types/article';
 
 // Redirect GitHub Pages to Vercel (serverless API required)
 const PRODUCTION_URL = 'https://newsflow-rss-reader.vercel.app';
@@ -33,7 +39,7 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
   const [displayCount, setDisplayCount] = useState(ITEMS_PER_PAGE);
-  const [sourceTimings, setSourceTimings] = useState<{ sourceId: string; sourceName: string; timing: number; articleCount: number }[]>([]);
+  const [sourceTimings, setSourceTimings] = useState<SourceTiming[]>([]);
   const [showTimingDialog, setShowTimingDialog] = useState(false);
 
   // Use a Set for O(1) bookmark lookups instead of Array.some() O(n)
@@ -74,7 +80,6 @@ export default function Home() {
 
     try {
       const source = sourceId || activeSource;
-      // Add cache-busting timestamp to ensure fresh data on each request
       const url = `${API_URL}/rss?source=${source === ALL_SOURCES_ID ? ALL_SOURCES_ID : source}&_t=${Date.now()}`;
 
       const response = await fetch(url);
@@ -179,12 +184,10 @@ export default function Home() {
     return displayArticles.slice(0, displayCount);
   }, [displayArticles, displayCount]);
 
-  // Filter slow sources for stats bar display (memoized to avoid re-filtering on every render)
   const slowSources = useMemo(() => {
     return sourceTimings.filter(t => t.timing > TIMING_THRESHOLDS.FAST);
   }, [sourceTimings]);
 
-  // Sort timings by slowest first for dialog (memoized to avoid re-sorting on every render)
   const sortedTimings = useMemo(() => {
     return [...sourceTimings].sort((a, b) => b.timing - a.timing);
   }, [sourceTimings]);
@@ -373,22 +376,15 @@ export default function Home() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {sortedTimings.map((t) => {
-                  const getTimingColor = () => {
-                    if (t.timing > TIMING_THRESHOLDS.MEDIUM) return TIMING_COLORS.SLOW;
-                    if (t.timing > TIMING_THRESHOLDS.FAST) return TIMING_COLORS.MEDIUM;
-                    return TIMING_COLORS.FAST;
-                  };
-                  return (
+                {sortedTimings.map((t) => (
                     <TableRow key={t.sourceId}>
                       <TableCell>{t.sourceName}</TableCell>
-                      <TableCell className={`text-right ${getTimingColor()}`}>
+                      <TableCell className={`text-right ${getTimingColor(t.timing)}`}>
                         {t.timing}ms
                       </TableCell>
                       <TableCell className="text-right text-muted-foreground">{t.articleCount}</TableCell>
                     </TableRow>
-                  );
-                })}
+                ))}
               </TableBody>
             </Table>
           </div>

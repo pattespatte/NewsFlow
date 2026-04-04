@@ -37,20 +37,17 @@ function setCachedFeed(url: string, data: { articles: Article[]; error?: string 
   });
 }
 
-// Helper to create error response with timing
 function createErrorResponse(error: string, timing: number): { articles: Article[]; error: string; timing: number } {
   return { articles: [], error, timing };
 }
 
 async function fetchFeed(url: string, sourceId: string): Promise<{ articles: Article[]; error?: string; timing?: number }> {
   const startTime = Date.now();
-  // Validate source before fetching
   const source = NEWS_SOURCES.find(s => s.id === sourceId);
   if (!source) {
     return { articles: [], error: 'Unknown source', timing: 0 };
   }
 
-  // Check cache first
   const cached = getCachedFeed(url);
   if (cached) {
     return { ...cached.data, timing: Date.now() - startTime };
@@ -73,7 +70,7 @@ async function fetchFeed(url: string, sourceId: string): Promise<{ articles: Art
     if (!response.ok) {
       const timing = Date.now() - startTime;
       const errorData = createErrorResponse(`HTTP ${response.status}`, timing);
-      setCachedFeed(url, { articles: [], error: errorData.error }); // Cache without timing
+      setCachedFeed(url, { articles: [], error: errorData.error });
       return errorData;
     }
 
@@ -82,7 +79,7 @@ async function fetchFeed(url: string, sourceId: string): Promise<{ articles: Art
     if (!xml || xml.length < MIN_XML_LENGTH) {
       const timing = Date.now() - startTime;
       const errorData = createErrorResponse('Empty response', timing);
-      setCachedFeed(url, { articles: [], error: errorData.error }); // Cache without timing
+      setCachedFeed(url, { articles: [], error: errorData.error });
       return errorData;
     }
 
@@ -90,7 +87,6 @@ async function fetchFeed(url: string, sourceId: string): Promise<{ articles: Art
     const timing = Date.now() - startTime;
     const result = { articles, timing };
 
-    // Cache the result (without timing so we don't cache stale timing)
     setCachedFeed(url, { articles });
 
     return result;
@@ -123,7 +119,6 @@ export async function GET(request: Request) {
     return NextResponse.json(response);
   }
 
-  // Fetch all feeds in parallel and collect timing info
   const fetchPromises = sourcesToFetch.map(async (source) => {
     const result = await fetchFeed(source.url, source.id);
     if (result.error) {
@@ -135,7 +130,6 @@ export async function GET(request: Request) {
   try {
     const results = await Promise.all(fetchPromises);
 
-    // Collect source timing info
     response.sourceTimings = results.map(({ source, result }) => ({
       sourceId: source.id,
       sourceName: source.name,
@@ -153,25 +147,18 @@ export async function GET(request: Request) {
       }
     }
 
-    // Convert back to array and sort by date (newest first)
-    // Parse dates once to avoid creating Date objects in every comparison
-    const articlesWithTimestamp = Array.from(seenUrls.values()).map(article => ({
-      ...article,
-      _timestamp: new Date(article.pubDate).getTime(),
-    }));
-    articlesWithTimestamp.sort((a, b) => b._timestamp - a._timestamp);
+    // Sort by date (newest first), parsing dates once
+    const sorted = Array.from(seenUrls.values());
+    const timestamps = new Map(sorted.map(a => [a.link, new Date(a.pubDate).getTime()]));
+    sorted.sort((a, b) => timestamps.get(b.link)! - timestamps.get(a.link)!);
 
-    // Remove the temporary timestamp field and limit to max articles
-    response.articles = articlesWithTimestamp.map(({ _timestamp, ...article }) => article).slice(0, MAX_ARTICLES);
+    response.articles = sorted.slice(0, MAX_ARTICLES);
 
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to fetch feeds';
     response.errors.push(message);
   }
 
-  // Set cache and CORS headers
-  // Disable browser caching to prevent empty responses from being cached
-  // Server-side in-memory cache is still active
   return NextResponse.json(response, {
     headers: {
       'Cache-Control': 'no-store, no-cache, must-revalidate',

@@ -42,9 +42,16 @@ export interface RSSFeed {
   items: RSSItem[];
 }
 
+export interface SourceTiming {
+  sourceId: string;
+  sourceName: string;
+  timing: number;
+  articleCount: number;
+}
+
 export interface RSSResponse {
   articles: Article[];
   errors: string[];
   lastUpdated: string;
-  sourceTimings?: { sourceId: string; sourceName: string; timing: number; articleCount: number }[];
+  sourceTimings?: SourceTiming[];
 }
