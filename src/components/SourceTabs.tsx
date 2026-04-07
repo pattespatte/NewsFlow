@@ -20,6 +20,7 @@ export function SourceTabs({ activeSource, onSourceChange }: SourceTabsProps) {
           return (
             <button
               key={source.id}
+              data-source-id={source.id}
               onClick={() => onSourceChange(source.id)}
               className={cn(
                 'px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ease-out whitespace-nowrap cursor-pointer',

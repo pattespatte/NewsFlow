@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 import { matchesSearch } from '@/lib/utils';
 import { API_URL, STORAGE_KEYS, ALL_SOURCES_ID, ITEMS_PER_PAGE, TIMING_THRESHOLDS, TIMING_COLORS } from '@/lib/constants';
+import { getSourceById } from '@/lib/sources';
 
 function getTimingColor(timing: number): string {
   if (timing > TIMING_THRESHOLDS.MEDIUM) return TIMING_COLORS.SLOW;
@@ -50,6 +51,18 @@ export default function Home() {
       const currentPath = window.location.pathname.replace(/\/NewsFlow\/?/, '') || '';
       const currentSearch = window.location.search;
       window.location.href = `${PRODUCTION_URL}/${currentPath}${currentSearch}`;
+      return;
+    }
+    // Read source from URL on mount
+    const param = new URLSearchParams(window.location.search).get('source');
+    if (param && getSourceById(param)) {
+      setActiveSource(param);
+      // Focus and scroll the matching tab into view
+      requestAnimationFrame(() => {
+        const btn = document.querySelector(`[data-source-id="${param}"]`) as HTMLElement;
+        btn?.scrollIntoView({ behavior: 'instant', inline: 'center', block: 'nearest' });
+        btn?.focus();
+      });
     }
   }, []);
 
@@ -113,6 +126,14 @@ export default function Home() {
     setActiveSource(sourceId);
     setShowBookmarks(false);
     setSearchQuery('');
+    // Sync URL without page reload
+    const url = new URL(window.location.href);
+    if (sourceId === ALL_SOURCES_ID) {
+      url.searchParams.delete('source');
+    } else {
+      url.searchParams.set('source', sourceId);
+    }
+    window.history.replaceState(null, '', url.toString());
   }, []);
 
   // Toggle bookmark
