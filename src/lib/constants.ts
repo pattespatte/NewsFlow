@@ -20,7 +20,7 @@ export const ITEMS_PER_PAGE = 12; // 3 columns x 4 rows
 // RSS parsing
 export const RSS_CONSTANTS = {
   MIN_XML_LENGTH: 100,
-  MAX_ARTICLES: 150,
+  MAX_ARTICLES: 1000,
   CACHE_TTL: 5 * 60 * 1000, // 5 minutes
   FETCH_TIMEOUT: 10 * 1000, // 10 seconds
 } as const;

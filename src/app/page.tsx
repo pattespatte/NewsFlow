@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Header } from '@/components/Header';
 import { SourceTabs } from '@/components/SourceTabs';
 import { ArticleCard } from '@/components/ArticleCard';
+import { SourceCarousel } from '@/components/SourceCarousel';
 import { LoadingSkeleton } from '@/components/LoadingSkeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle, Newspaper, RefreshCw, Clock } from 'lucide-react';
@@ -12,8 +13,8 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 import { matchesSearch } from '@/lib/utils';
-import { API_URL, STORAGE_KEYS, ALL_SOURCES_ID, ITEMS_PER_PAGE, TIMING_THRESHOLDS, TIMING_COLORS, getTimingColor } from '@/lib/constants';
-import { getSourceById } from '@/lib/sources';
+import { API_URL, STORAGE_KEYS, ALL_SOURCES_ID, TIMING_THRESHOLDS, TIMING_COLORS, getTimingColor } from '@/lib/constants';
+import { getSourceById, ALL_NEWS_SOURCE, NEWS_SOURCES } from '@/lib/sources';
 import { ClientTime } from '@/components/ClientTime';
 import type { Article, RSSResponse, SourceTiming } from '@/types/article';
 
@@ -31,7 +32,6 @@ export default function Home() {
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
-  const [displayCount, setDisplayCount] = useState(ITEMS_PER_PAGE);
   const [sourceTimings, setSourceTimings] = useState<SourceTiming[]>([]);
   const [showTimingDialog, setShowTimingDialog] = useState(false);
 
@@ -75,15 +75,13 @@ export default function Home() {
     localStorage.setItem(STORAGE_KEYS.BOOKMARKS, JSON.stringify(bookmarks));
   }, [bookmarks]);
 
-  // Fetch articles from API
-  const fetchArticles = useCallback(async (sourceId?: string) => {
+  // Fetch articles from API — always fetch all sources
+  const fetchArticles = useCallback(async () => {
     setIsLoading(true);
     setErrors([]);
-    setDisplayCount(ITEMS_PER_PAGE);
 
     try {
-      const source = sourceId || activeSource;
-      const url = `${API_URL}/rss?source=${source === ALL_SOURCES_ID ? ALL_SOURCES_ID : source}&_t=${Date.now()}`;
+      const url = `${API_URL}/rss?source=${ALL_SOURCES_ID}&_t=${Date.now()}`;
 
       const response = await fetch(url);
       const data: RSSResponse = await response.json();
@@ -97,19 +95,12 @@ export default function Home() {
     } finally {
       setIsLoading(false);
     }
-  }, [activeSource]);
+  }, []);
 
   // Initial fetch
   useEffect(() => {
     fetchArticles();
-  }, []);
-
-  // Fetch when source changes
-  useEffect(() => {
-    if (!showBookmarks) {
-      fetchArticles();
-    }
-  }, [activeSource, showBookmarks, fetchArticles]);
+  }, [fetchArticles]);
 
   // Handle source change
   const handleSourceChange = useCallback((sourceId: string) => {
@@ -166,34 +157,27 @@ export default function Home() {
     setShowSearch((prev) => !prev);
   }, []);
 
-  // Get display articles
+  // Get display articles (used for search and bookmarks modes)
   const displayArticles = useMemo(() => {
     const base = showBookmarks ? bookmarks : articles;
-
-    // Filter by active source when not in bookmarks mode
-    const sourceFiltered = !showBookmarks && activeSource !== ALL_SOURCES_ID
-      ? base.filter((a) => a.source.id === activeSource)
-      : base;
 
     // Filter by search query - pre-compute lowercase query once
     const searchFiltered = searchQuery.trim()
       ? (() => {
           const query = searchQuery.toLowerCase();
-          return sourceFiltered.filter((a) =>
+          return base.filter((a) =>
             matchesSearch(a.title, query) ||
             matchesSearch(a.description, query) ||
             matchesSearch(a.source.name, query)
           );
         })()
-      : sourceFiltered;
+      : base;
 
     return searchFiltered;
-  }, [showBookmarks, bookmarks, articles, activeSource, searchQuery]);
+  }, [showBookmarks, bookmarks, articles, searchQuery]);
 
-  // Paginated articles
-  const paginatedArticles = useMemo(() => {
-    return displayArticles.slice(0, displayCount);
-  }, [displayArticles, displayCount]);
+  // All sources for the carousel (includes "All News")
+  const carouselSources = useMemo(() => [ALL_NEWS_SOURCE, ...NEWS_SOURCES], []);
 
   const slowSources = useMemo(() => {
     return sourceTimings.filter(t => t.timing > TIMING_THRESHOLDS.FAST);
@@ -202,14 +186,6 @@ export default function Home() {
   const sortedTimings = useMemo(() => {
     return [...sourceTimings].sort((a, b) => b.timing - a.timing);
   }, [sourceTimings]);
-
-  // Has more articles to load
-  const hasMore = displayCount < displayArticles.length;
-
-  // Load more articles
-  const handleLoadMore = useCallback(() => {
-    setDisplayCount((prev) => prev + ITEMS_PER_PAGE);
-  }, []);
 
   return (
     <div className="min-h-screen bg-background" suppressHydrationWarning>
@@ -254,13 +230,13 @@ export default function Home() {
         {!isLoading && (
           <>
             {/* Stats Bar */}
-            {!showBookmarks && displayArticles.length > 0 && (
+            {!showBookmarks && (searchQuery ? displayArticles.length > 0 : articles.length > 0) && (
               <div className="px-4 py-3 flex items-center justify-between border-b bg-muted/20 gap-4">
                 <p className="text-sm text-muted-foreground">
                   {searchQuery ? (
                     <>Found <span className="font-medium text-foreground">{displayArticles.length}</span> articles for "{searchQuery}"</>
                   ) : (
-                    <><span className="font-medium text-foreground">{displayArticles.length}</span> articles</>
+                    <><span className="font-medium text-foreground">{articles.length}</span> articles</>
                   )}
                 </p>
                 {sourceTimings.length > 0 && (
@@ -288,14 +264,12 @@ export default function Home() {
               </div>
             )}
 
-            {displayArticles.length === 0 && !showBookmarks && !isLoading && (
+            {articles.length === 0 && !showBookmarks && !searchQuery && !isLoading && (
               <div className="flex flex-col items-center justify-center py-20 px-4">
                 <Newspaper className="w-16 h-16 text-muted-foreground/30 mb-4" />
                 <h3 className="text-lg font-medium text-muted-foreground">No articles found</h3>
                 <p className="text-sm text-muted-foreground mt-1">
-                  {searchQuery 
-                    ? 'Try a different search term'
-                    : 'Try selecting a different source or refresh the page'}
+                  Try refreshing the page
                 </p>
                 {!searchQuery && (
                   <Button
@@ -310,31 +284,31 @@ export default function Home() {
               </div>
             )}
 
-            {paginatedArticles.length > 0 && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
-                {paginatedArticles.map((article) => (
-                  <ArticleCard
-                    key={article.id}
-                    article={article}
-                    isBookmarked={isBookmarked(article.id)}
-                    onToggleBookmark={toggleBookmark}
-                  />
-                ))}
-              </div>
-            )}
-
-            {/* Load More Button */}
-            {hasMore && (
-              <div className="flex justify-center py-6">
-                <Button
-                  variant="outline"
-                  size="lg"
-                  onClick={handleLoadMore}
-                  className="min-w-[200px] hover:bg-muted hover:scale-105 transition-all duration-200 ease-out cursor-pointer"
-                >
-                  Load More ({displayArticles.length - displayCount} remaining)
-                </Button>
-              </div>
+            {/* Carousel (normal browse mode) or Grid (search/bookmarks) */}
+            {!searchQuery && !showBookmarks ? (
+              articles.length > 0 && (
+                <SourceCarousel
+                  sources={carouselSources}
+                  articles={articles}
+                  activeSource={activeSource}
+                  onSourceChange={handleSourceChange}
+                  isBookmarked={isBookmarked}
+                  onToggleBookmark={toggleBookmark}
+                />
+              )
+            ) : (
+              displayArticles.length > 0 && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+                  {displayArticles.map((article) => (
+                    <ArticleCard
+                      key={article.id}
+                      article={article}
+                      isBookmarked={isBookmarked(article.id)}
+                      onToggleBookmark={toggleBookmark}
+                    />
+                  ))}
+                </div>
+              )
             )}
           </>
         )}
