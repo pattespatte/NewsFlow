@@ -236,7 +236,7 @@ export default function Home() {
                   {searchQuery ? (
                     <>Found <span className="font-medium text-foreground">{displayArticles.length}</span> articles for "{searchQuery}"</>
                   ) : (
-                    <><span className="font-medium text-foreground">{articles.length}</span> articles</>
+                    <><span className="font-medium text-foreground">{activeSource === ALL_SOURCES_ID ? articles.length : articles.filter(a => a.source.id === activeSource).length}</span> articles</>
                   )}
                 </p>
                 {sourceTimings.length > 0 && (
