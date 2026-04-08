@@ -1,26 +1,37 @@
-# 📰 NewsFlow RSS Reader
+# NewsFlow RSS Reader
 
-A modern, beautiful RSS reader web application built with Next.js 16, featuring news from 12 major sources including NYT, BBC, NBC, ABC, CBS, Al Jazeera, NPR, The Guardian, and Wired.
+A modern, beautiful RSS reader web application built with Next.js 16, featuring news from 24 sources including NYT, BBC, NBC, ABC, CBS, Al Jazeera, NPR, The Guardian, Wired, and more.
 
 ![NewsFlow](https://img.shields.io/badge/Next.js-16-black?style=flat&logo=next.js)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?style=flat&logo=typescript)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind-4-38B2AC?style=flat&logo=tailwind-css)
 
-## ✨ Features
+## Features
 
-### 🌍 News Sources
+### News Sources
 
-- **NYT** - Top Stories, World, Technology, Business feeds
+- **NYT** - Top Stories, World, Technology, Business
 - **BBC** - World News
 - **NBC News** - Latest headlines
 - **ABC News** - Top Stories
 - **CBS News** - Latest News
+- **The Atlantic** - Culture & Politics
 - **Al Jazeera** - International coverage
-- **NPR** - US News
+- **NPR** - US News, Politics
 - **The Guardian** - World News
 - **Wired** - Technology & Culture
+- **Ars Technica** - Technology
+- **The Hill** - Political News
+- **Pew Research** - Research & Data
+- **POLITICO** - Politics
+- **Axios** - News & Analysis
+- **The Intercept** - Investigative Journalism
+- **Deutsche Welle** - International
+- **Foreign Policy** - Global Affairs
+- **Time** - News & Analysis
+- **Independent** - World News
 
-### 🎨 User Experience
+### User Experience
 
 - **Article Deduplication** - Smart URL-based deduplication prevents duplicate articles from multiple sources
 - **Search & Filter** - Full-text search across all articles with source filtering
@@ -29,162 +40,85 @@ A modern, beautiful RSS reader web application built with Next.js 16, featuring 
 - **Responsive Design** - Mobile-first design that works on all devices
 - **PWA Support** - Install as a home screen app on mobile devices
 
-### 🔧 Technical Features
+### Technical Features
 
-- **External RSS API** - Server-side RSS fetching with 5-minute caching (deployed separately)
+- **Server-Side RSS Fetching** - API routes fetch and parse RSS feeds with 5-minute caching
 - **HTML Entity Decoding** - Properly handles all HTML entities including numeric ones
-- **Image Extraction** - Pulls article images from RSS feeds (media:content, enclosures, content:encoded)
+- **Image Extraction** - Pulls article images from RSS feeds (media:content, enclosures, content:encoded, og:image)
 - **Click-to-Read** - Entire article cards are clickable to open full articles
 - **Pagination** - Load more articles on demand for better performance
-- **Error Handling** - Graceful error messages when feeds fail to load
-- **Optimized Dependencies** - Only ~520MB node_modules (down from 1GB+)
+- **Source Performance** - Timing dialog shows fetch performance per source
 
-## 🚀 Quick Start
+## Quick Start
 
 ```bash
 # Install dependencies
 bun install
-```
 
-### Local Development
-
-NewsFlow supports three API modes for local development:
-
-#### Option 1: Local API Server (Default)
-
-Run both the frontend and a local API server:
-
-```bash
-# Terminal 1: Start the API server on port 3001
-cd api-server
-npm run dev
-
-# Terminal 2: Start the frontend (uses local API by default)
+# Start development server
 bun run dev
 ```
 
-Visit [http://localhost:3000](http://localhost:3000) for the frontend.
-
-#### Option 2: Production API (Recommended)
-
-Use the deployed Vercel API for faster development without running a local API server:
-
-```bash
-# Create .env.local file
-echo "NEXT_PUBLIC_API_URL=https://news-flow-rho.vercel.app" > .env.local
-
-# Run dev server
-bun run dev
-```
-
-#### Option 3: Custom Local API Port
-
-If your API server runs on a different port:
-
-```bash
-# Create .env.local file with custom port
-echo "NEXT_PUBLIC_API_URL=http://localhost:3001" > .env.local
-
-# Run dev server
-bun run dev
-```
+Visit [http://localhost:3000](http://localhost:3000). The API runs on the same server.
 
 ### Production Build
 
 ```bash
-# Build for production (static export)
 bun run build
-
-# Preview production build locally
 bun run start
 ```
 
-## 🚢 Deployment
+## Deployment
 
-NewsFlow uses a split architecture:
+NewsFlow supports two deployment modes:
 
-- **Frontend**: Static site deployed to GitHub Pages
-- **API**: Serverless RSS fetching deployed to Vercel
+### Standalone (Vercel / Node.js)
 
-### Step 1: Deploy the API to Vercel
+The default `bun run build` produces a standalone server. Deploy to Vercel directly or run with Node/Bun.
 
-1. Go to [vercel.com](https://vercel.com) and sign up/login
-2. Click "Add New Project" → "Import Git Repository"
-3. Select your NewsFlow repository
-4. **Important**: Set "Root Directory" to `api-server`
-5. Click "Deploy"
-6. Copy the deployed API URL (e.g., `https://your-api.vercel.app`)
+### Static Export (GitHub Pages)
 
-### Step 2: Configure GitHub Pages
+Set `GITHUB_PAGES=true` to produce a static export. The GitHub Actions workflow (`.github/workflows/deploy.yml`) handles this automatically:
 
-1. Go to your repository on GitHub
-2. Click **Settings** → **Pages**
-3. Under "Build and deployment", set Source to **GitHub Actions**
+1. Removes API routes (not compatible with static export)
+2. Builds with `GITHUB_PAGES=true` and your `API_URL` secret
+3. Deploys to GitHub Pages
 
-### Step 3: Set API URL in GitHub Secrets
+The static site redirects to the Vercel deployment (which has the API routes).
 
-1. Go to **Settings** → **Secrets and variables** → **Actions**
-2. Click **New repository secret**
-3. Name: `API_URL`
-4. Value: Your Vercel API URL (e.g., `https://your-api.vercel.app`)
-
-### Step 4: Push to Deploy
-
-Push your changes to the `main` branch. The GitHub Action will automatically:
-
-1. Build the static site
-2. Deploy to GitHub Pages
-
-Your app will be available at `https://pattespatte.github.io/NewsFlow/`
-
-## 📁 Project Structure
+## Project Structure
 
 ```
-├── api-server/                    # Vercel API deployment
-│   ├── api/
-│   │   └── route.ts              # RSS feed fetching API
-│   ├── src/
-│   │   ├── lib/
-│   │   │   ├── constants.ts      # API constants
-│   │   │   ├── rss.ts            # RSS parsing
-│   │   │   ├── sources.ts        # News sources config
-│   │   │   └── utils.ts          # Helpers
-│   │   └── types/
-│   │       └── article.ts        # TypeScript types
-│   ├── package.json
-│   ├── next.config.ts
-│   └── tsconfig.json
-├── src/
-│   ├── app/
-│   │   ├── layout.tsx            # Root layout with theme provider
-│   │   ├── page.tsx              # Main application page
-│   │   └── globals.css           # Global styles and theme variables
-│   ├── components/
-│   │   ├── Header.tsx            # App header with search and theme toggle
-│   │   ├── ArticleCard.tsx       # Individual article card component
-│   │   ├── SourceTabs.tsx        # Source filter tabs
-│   │   ├── LoadingSkeleton.tsx   # Loading state skeleton
-│   │   ├── ThemeProvider.tsx     # Theme provider component
-│   │   └── ThemeToggle.tsx       # Dark/light mode toggle button
-│   │   └── ui/                   # shadcn/ui components
-│   ├── hooks/
-│   │   ├── use-mobile.ts         # Mobile detection hook
-│   │   └── use-toast.ts          # Toast notification hook
-│   ├── lib/
-│   │   ├── constants.ts          # App constants (includes API_URL)
-│   │   ├── rss.ts                # RSS parsing utilities
-│   │   ├── sources.ts            # News source configurations
-│   │   └── utils.ts              # Helper functions
-│   └── types/
-│       └── article.ts            # TypeScript interfaces
-├── .github/
-│   └── workflows/
-│       └── deploy.yml            # GitHub Pages deployment workflow
-├── next.config.ts                # Next.js config (static export)
-└── package.json
+src/
+  app/
+    api/
+      rss/
+        route.ts            # RSS feed fetching API (server-side)
+    layout.tsx              # Root layout with theme provider
+    page.tsx                # Main application page
+    globals.css             # Global styles and theme variables
+  components/
+    Header.tsx              # App header with search and theme toggle
+    ArticleCard.tsx         # Individual article card component
+    SourceTabs.tsx           # Source filter tabs
+    LoadingSkeleton.tsx     # Loading state skeleton
+    ClientTime.tsx          # Client-side time rendering
+    LegalPageLayout.tsx     # Terms/privacy page layout
+    ThemeProvider.tsx       # Theme provider component
+    ThemeToggle.tsx         # Dark/light mode toggle button
+    ui/                     # shadcn/ui components
+  hooks/
+    use-mobile.ts           # Mobile detection hook
+  lib/
+    constants.ts            # App constants
+    rss.ts                  # RSS parsing utilities
+    sources.ts              # News source configurations
+    utils.ts                # Helper functions
+  types/
+    article.ts              # TypeScript interfaces
 ```
 
-## 🛠️ Technologies Used
+## Technologies Used
 
 - **Next.js 16** - React framework with App Router
 - **TypeScript 5** - Type-safe development
@@ -192,26 +126,14 @@ Your app will be available at `https://pattespatte.github.io/NewsFlow/`
 - **shadcn/ui** - High-quality UI components
 - **Lucide React** - Icon library
 - **next-themes** - Theme management
-- **Framer Motion** - Animations
-- **Sonner** - Toast notifications
 - **Vercel** - API hosting (free tier)
 - **GitHub Pages** - Static site hosting (free)
 
-## 📱 PWA Features
-
-NewsFlow is built as a Progressive Web App (PWA):
-
-- Installable on mobile devices
-- Service worker for offline capability
-- App icons in multiple sizes (192x192, 512x512, 1024x1024)
-- Responsive mobile-first design
-- Touch-optimized interface
-
-## 🔧 Configuration
+## Configuration
 
 ### Adding New News Sources
 
-Edit `src/lib/sources.ts` (and `api-server/src/lib/sources.ts` for the API):
+Edit `src/lib/sources.ts`:
 
 ```typescript
 {
@@ -225,7 +147,7 @@ Edit `src/lib/sources.ts` (and `api-server/src/lib/sources.ts` for the API):
 
 ### Adjusting Cache Settings
 
-Edit `src/lib/constants.ts` (and `api-server/src/lib/constants.ts` for the API):
+Edit `src/lib/constants.ts`:
 
 ```typescript
 RSS_CONSTANTS: {
@@ -236,24 +158,20 @@ RSS_CONSTANTS: {
 } as const;
 ```
 
-### API Configuration for Local Development
+### API URL Override
 
-The API URL is controlled by the `NEXT_PUBLIC_API_URL` environment variable:
+Set `NEXT_PUBLIC_API_URL` in `.env.local` to point to an external API:
 
-| Value | API Used | Notes |
-|-------|----------|-------|
-| *(empty)* | `/api` (relative) | Default - requires local API server running |
-| `http://localhost:3001` | Local API on port 3001 | For custom local API port |
-| `https://news-flow-rho.vercel.app` | Production Vercel API | Recommended - no local API needed |
+```bash
+echo "NEXT_PUBLIC_API_URL=https://your-api.vercel.app/" > .env.local
+```
 
-The `/api` path is appended automatically if not already included in the URL.
+## PWA Features
 
-## 📝 License
+- Installable on mobile devices
+- App icons in multiple sizes (192x192, 512x512, 1024x1024)
+- Responsive mobile-first design
+
+## License
 
 This project is open source and available under the MIT License.
-
-## 🙏 Acknowledgments
-
-- News sources mentioned above for their RSS feeds
-- shadcn/ui for the beautiful UI components
-- Next.js team for the amazing framework

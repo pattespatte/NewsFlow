@@ -17,24 +17,6 @@ export const ALL_SOURCES_ID = 'all';
 // Pagination
 export const ITEMS_PER_PAGE = 12; // 3 columns x 4 rows
 
-// Time thresholds for date formatting (in milliseconds)
-export const TIME_THRESHOLDS = {
-  ONE_MINUTE: 60 * 1000,
-  ONE_HOUR: 60 * 60 * 1000,
-  ONE_DAY: 24 * 60 * 60 * 1000,
-  ONE_WEEK: 7 * 24 * 60 * 60 * 1000,
-} as const;
-
-// Content limits
-export const DESCRIPTION_MAX_LENGTH = 300;
-
-// Image dimensions
-export const PLACEHOLDER_IMAGE = {
-  WIDTH: 400,
-  HEIGHT: 250,
-  ASPECT_RATIO: '16/10' as const,
-} as const;
-
 // RSS parsing
 export const RSS_CONSTANTS = {
   MIN_XML_LENGTH: 100,
@@ -56,3 +38,9 @@ export const TIMING_COLORS = {
   MEDIUM: 'text-yellow-600 dark:text-yellow-400',
   SLOW: 'text-red-500 font-medium',
 } as const;
+
+export function getTimingColor(timing: number): string {
+  if (timing > TIMING_THRESHOLDS.MEDIUM) return TIMING_COLORS.SLOW;
+  if (timing > TIMING_THRESHOLDS.FAST) return TIMING_COLORS.MEDIUM;
+  return TIMING_COLORS.FAST;
+}

@@ -12,22 +12,14 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 import { matchesSearch } from '@/lib/utils';
-import { API_URL, STORAGE_KEYS, ALL_SOURCES_ID, ITEMS_PER_PAGE, TIMING_THRESHOLDS, TIMING_COLORS } from '@/lib/constants';
+import { API_URL, STORAGE_KEYS, ALL_SOURCES_ID, ITEMS_PER_PAGE, TIMING_THRESHOLDS, TIMING_COLORS, getTimingColor } from '@/lib/constants';
 import { getSourceById } from '@/lib/sources';
-
-function getTimingColor(timing: number): string {
-  if (timing > TIMING_THRESHOLDS.MEDIUM) return TIMING_COLORS.SLOW;
-  if (timing > TIMING_THRESHOLDS.FAST) return TIMING_COLORS.MEDIUM;
-  return TIMING_COLORS.FAST;
-}
 import { ClientTime } from '@/components/ClientTime';
 import type { Article, RSSResponse, SourceTiming } from '@/types/article';
 
 // Redirect GitHub Pages to Vercel (serverless API required)
 const PRODUCTION_URL = 'https://newsflow-rss-reader.vercel.app';
 const isGitHubPages = typeof window !== 'undefined' && window.location.hostname === 'pattespatte.github.io';
-
-// Local constants (deprecated - use imports from @/lib/constants)
 
 export default function Home() {
   const [articles, setArticles] = useState<Article[]>([]);
@@ -42,8 +34,6 @@ export default function Home() {
   const [displayCount, setDisplayCount] = useState(ITEMS_PER_PAGE);
   const [sourceTimings, setSourceTimings] = useState<SourceTiming[]>([]);
   const [showTimingDialog, setShowTimingDialog] = useState(false);
-
-  // Use a Set for O(1) bookmark lookups instead of Array.some() O(n)
 
   // Redirect GitHub Pages to Vercel (serverless API required)
   useEffect(() => {
