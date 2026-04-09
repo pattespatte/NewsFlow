@@ -63,15 +63,10 @@ function convertCbsThumbnailToLarge(url: string): string {
   return url;
 }
 
-// Convert Guardian small images to larger size
-// Guardian provides images with width parameter (e.g., width=140)
-// Replace with larger width for better quality
-function convertGuardianImageToLarge(url: string): string {
+// Decode Guardian image URLs — just clean up HTML entities, don't modify signed parameters
+function decodeGuardianImageUrl(url: string): string {
   if (url.includes('i.guim.co.uk')) {
-    // Decode HTML entities (&amp; -> &) so width replacement works
-    const decoded = url.replace(/&amp;/g, '&');
-    // Replace any width parameter with width=1400 for best quality
-    return decoded.replace(/width=\d+/, 'width=1400');
+    return url.replace(/&amp;/g, '&');
   }
   return url;
 }
@@ -97,13 +92,13 @@ function extractImageUrl(item: RSSItem, sourceId: string): string | undefined {
 
   // Check for media:thumbnail (images only, media:content can be video)
   if (item['media:thumbnail']) {
-    const imageUrl = convertGuardianImageToLarge(item['media:thumbnail']);
+    const imageUrl = decodeGuardianImageUrl(item['media:thumbnail']);
     return sourceId.startsWith('bbc-') ? convertBbcThumbnailToLarge(imageUrl) : imageUrl;
   }
 
   // Check for media:content (only if not already found in thumbnail)
   if (item['media:content']) {
-    const imageUrl = convertGuardianImageToLarge(item['media:content']);
+    const imageUrl = decodeGuardianImageUrl(item['media:content']);
     return sourceId.startsWith('bbc-') ? convertBbcThumbnailToLarge(imageUrl) : imageUrl;
   }
 
@@ -190,10 +185,17 @@ function parseRssXml(xml: string): RSSFeed {
         };
       }
 
-      // Extract media:content
-      const mediaMatch = itemXml.match(/<media:content[^>]+url=["']([^"']+)["']/i);
-      if (mediaMatch) {
-        item['media:content'] = mediaMatch[1];
+      // Extract media:content — pick the largest width (Guardian provides 140, 460, 700)
+      const mediaMatches = [...itemXml.matchAll(/<media:content[^>]+width=["'](\d+)["'][^>]+url=["']([^"']+)["']/gi)];
+      if (mediaMatches.length > 0) {
+        const largest = mediaMatches.reduce((best, m) => parseInt(m[1]) > parseInt(best[1]) ? m : best);
+        item['media:content'] = largest[2];
+      } else {
+        // Fallback: match without width attribute
+        const mediaMatch = itemXml.match(/<media:content[^>]+url=["']([^"']+)["']/i);
+        if (mediaMatch) {
+          item['media:content'] = mediaMatch[1];
+        }
       }
 
       // Extract media:thumbnail
