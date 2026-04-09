@@ -140,6 +140,53 @@ export default function Home() {
 
     // Persist to localStorage
     setCachedArticles(final, now, allTimings);
+
+    // Enrich articles missing images (Al Jazeera, Guardian, Deutsche Welle)
+    enrichArticleImages(final, now, allTimings);
+  }, []);
+
+  // Fetch og:images for articles that lack them (sources like Al Jazeera don't include images in RSS)
+  const enrichArticleImages = useCallback(async (
+    currentArticles: Article[],
+    updatedTime: string,
+    timings: SourceTiming[],
+  ) => {
+    const articlesNeedingImages = currentArticles.filter(a => !a.imageUrl);
+    if (articlesNeedingImages.length === 0) return;
+
+    // Process in batches of 10
+    const BATCH_SIZE = 10;
+    let enrichedArticles = [...currentArticles];
+
+    for (let i = 0; i < articlesNeedingImages.length; i += BATCH_SIZE) {
+      const batch = articlesNeedingImages.slice(i, i + BATCH_SIZE);
+      const urls = batch.map(a => a.link);
+
+      try {
+        const res = await fetch(`${API_URL}/og-image`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ urls }),
+        });
+        const { images } = await res.json();
+
+        let changed = false;
+        enrichedArticles = enrichedArticles.map(article => {
+          if (!article.imageUrl && images[article.link]) {
+            changed = true;
+            return { ...article, imageUrl: images[article.link] };
+          }
+          return article;
+        });
+
+        if (changed) {
+          setArticles([...enrichedArticles]);
+          setCachedArticles(enrichedArticles, updatedTime, timings);
+        }
+      } catch {
+        // Silently ignore — images will show as placeholders
+      }
+    }
   }, []);
 
   // On mount: show cached articles instantly, then fetch fresh in background
@@ -150,9 +197,11 @@ export default function Home() {
       setLastUpdated(cached.lastUpdated);
       setSourceTimings(cached.sourceTimings);
       setIsLoading(false);
+      // Enrich cached articles that may be missing images
+      enrichArticleImages(cached.articles, cached.lastUpdated || new Date().toISOString(), cached.sourceTimings);
     }
     fetchArticlesProgressively();
-  }, [fetchArticlesProgressively]);
+  }, [fetchArticlesProgressively, enrichArticleImages]);
 
   // Handle source change
   const handleSourceChange = useCallback((sourceId: string) => {
