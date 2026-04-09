@@ -15,6 +15,7 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@
 import { matchesSearch } from '@/lib/utils';
 import { API_URL, STORAGE_KEYS, ALL_SOURCES_ID, TIMING_THRESHOLDS, TIMING_COLORS, getTimingColor } from '@/lib/constants';
 import { getSourceById, ALL_NEWS_SOURCE, NEWS_SOURCES } from '@/lib/sources';
+import { getCachedArticles, setCachedArticles, clearArticleCache } from '@/lib/cache';
 import { ClientTime } from '@/components/ClientTime';
 import type { Article, RSSResponse, SourceTiming } from '@/types/article';
 
@@ -28,6 +29,7 @@ export default function Home() {
   const [activeSource, setActiveSource] = useState(ALL_SOURCES_ID);
   const [showBookmarks, setShowBookmarks] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -75,32 +77,82 @@ export default function Home() {
     localStorage.setItem(STORAGE_KEYS.BOOKMARKS, JSON.stringify(bookmarks));
   }, [bookmarks]);
 
-  // Fetch articles from API — always fetch all sources
-  const fetchArticles = useCallback(async () => {
-    setIsLoading(true);
+  // Fetch articles progressively — batch sources, show results as each batch completes
+  const fetchArticlesProgressively = useCallback(async () => {
+    const BATCH_SIZE = 6;
+    const allArticles: Article[] = [];
+    const allErrors: string[] = [];
+    const allTimings: SourceTiming[] = [];
+
+    setIsRefreshing(true);
     setErrors([]);
 
-    try {
-      const url = `${API_URL}/rss?source=${ALL_SOURCES_ID}&_t=${Date.now()}`;
+    for (let i = 0; i < NEWS_SOURCES.length; i += BATCH_SIZE) {
+      const batch = NEWS_SOURCES.slice(i, i + BATCH_SIZE);
 
-      const response = await fetch(url);
-      const data: RSSResponse = await response.json();
+      const results = await Promise.allSettled(
+        batch.map(source =>
+          fetch(`${API_URL}/rss?source=${source.id}`)
+            .then(r => r.json()) as Promise<RSSResponse>
+        )
+      );
 
-      setArticles(data.articles);
-      setErrors(data.errors);
-      setLastUpdated(data.lastUpdated);
-      setSourceTimings(data.sourceTimings || []);
-    } catch (error) {
-      setErrors(['Failed to fetch news. Please try again.']);
-    } finally {
+      for (const result of results) {
+        if (result.status === 'fulfilled') {
+          const data = result.value;
+          allArticles.push(...data.articles);
+          if (data.errors) allErrors.push(...data.errors);
+          if (data.sourceTimings) allTimings.push(...data.sourceTimings);
+        }
+      }
+
+      // Deduplicate and sort after each batch so user sees content progressively
+      const seenUrls = new Map<string, Article>();
+      for (const article of allArticles) {
+        if (!seenUrls.has(article.link)) {
+          seenUrls.set(article.link, article);
+        }
+      }
+      const merged = Array.from(seenUrls.values());
+      merged.sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime());
+
+      setArticles([...merged]);
       setIsLoading(false);
     }
+
+    // Final state update
+    const seenUrls = new Map<string, Article>();
+    for (const article of allArticles) {
+      if (!seenUrls.has(article.link)) {
+        seenUrls.set(article.link, article);
+      }
+    }
+    const final = Array.from(seenUrls.values());
+    final.sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime());
+
+    const now = new Date().toISOString();
+    setArticles(final);
+    setErrors(allErrors);
+    setLastUpdated(now);
+    setSourceTimings(allTimings);
+    setIsRefreshing(false);
+    setIsLoading(false);
+
+    // Persist to localStorage
+    setCachedArticles(final, now, allTimings);
   }, []);
 
-  // Initial fetch
+  // On mount: show cached articles instantly, then fetch fresh in background
   useEffect(() => {
-    fetchArticles();
-  }, [fetchArticles]);
+    const cached = getCachedArticles();
+    if (cached) {
+      setArticles(cached.articles);
+      setLastUpdated(cached.lastUpdated);
+      setSourceTimings(cached.sourceTimings);
+      setIsLoading(false);
+    }
+    fetchArticlesProgressively();
+  }, [fetchArticlesProgressively]);
 
   // Handle source change
   const handleSourceChange = useCallback((sourceId: string) => {
@@ -143,9 +195,10 @@ export default function Home() {
   // Handle refresh
   const handleRefresh = useCallback(() => {
     if (!showBookmarks) {
-      fetchArticles();
+      clearArticleCache();
+      fetchArticlesProgressively();
     }
-  }, [showBookmarks, fetchArticles]);
+  }, [showBookmarks, fetchArticlesProgressively]);
 
   // Handle search change
   const handleSearchChange = useCallback((query: string) => {
@@ -193,7 +246,7 @@ export default function Home() {
         showBookmarks={showBookmarks}
         onToggleBookmarks={handleToggleBookmarks}
         onRefresh={handleRefresh}
-        isLoading={isLoading}
+        isLoading={isLoading || isRefreshing}
         bookmarkCount={bookmarks.length}
         searchQuery={searchQuery}
         onSearchChange={handleSearchChange}
@@ -223,11 +276,11 @@ export default function Home() {
           </div>
         )}
 
-        {/* Loading State */}
-        {isLoading && <LoadingSkeleton count={9} />}
+        {/* Loading State — only show skeleton on first visit with no cached data */}
+        {isLoading && articles.length === 0 && <LoadingSkeleton count={9} />}
 
-        {/* Content */}
-        {!isLoading && (
+        {/* Content — show when we have articles OR when initial load is done */}
+        {(articles.length > 0 || !isLoading) && (
           <>
             {/* Stats Bar */}
             {!showBookmarks && (searchQuery ? displayArticles.length > 0 : articles.length > 0) && (

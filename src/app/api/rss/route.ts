@@ -161,7 +161,7 @@ export async function GET(request: Request) {
 
   return NextResponse.json(response, {
     headers: {
-      'Cache-Control': 'no-store, no-cache, must-revalidate',
+      'Cache-Control': 'public, max-age=120, stale-while-revalidate=300',
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type',

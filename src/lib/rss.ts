@@ -52,53 +52,6 @@ function stripTrackingParams(url: string): string {
   }
 }
 
-// Generic function to fetch og:image from article page
-// Used by Al Jazeera and Guardian since their RSS feed images are protected/missing
-async function fetchOgImage(
-  articleUrl: string,
-  cleanupFn?: (url: string) => string
-): Promise<string | undefined> {
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000);
-
-    const response = await fetch(articleUrl, {
-      headers: {
-        'Accept': 'text/html',
-        'User-Agent': 'Mozilla/5.0 (compatible; NewsFlowRSS/1.0)',
-      },
-      signal: controller.signal,
-    });
-
-    clearTimeout(timeoutId);
-
-    if (!response.ok) {
-      return undefined;
-    }
-
-    const html = await response.text();
-
-    // Extract og:image meta tag content
-    // Try pattern 1: <meta property="og:image" content="..."> (most sites)
-    let ogImageMatch = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i);
-    // Try pattern 2: <meta content="..." property="og:image"> (Deutsche Welle)
-    if (!ogImageMatch) {
-      ogImageMatch = html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i);
-    }
-    if (ogImageMatch) {
-      let imageUrl = ogImageMatch[1].replace(/&amp;/g, '&');
-      if (cleanupFn) {
-        imageUrl = cleanupFn(imageUrl);
-      }
-      return imageUrl;
-    }
-
-    return undefined;
-  } catch {
-    return undefined;
-  }
-}
-
 // Convert CBS News thumbnail URLs to full-size images
 // CBS provides small thumbnails like: /thumbnail/60x60/<hash>/filename.jpg
 // Removing the thumbnail path returns the full-size image
@@ -295,48 +248,6 @@ export async function parseRssFeed(xml: string, source: NewsSource): Promise<Art
     };
 
     articles.push(article);
-  }
-
-  // For Al Jazeera, fetch images from article pages for articles without images
-  if (source.id === 'aljazeera') {
-    const articlesWithoutImages = articles.filter(a => !a.imageUrl);
-    if (articlesWithoutImages.length > 0) {
-      const imagePromises = articlesWithoutImages.map(article =>
-        fetchOgImage(article.link, (url) => url.replace(/\?resize=\d+%2C\d+$/, ''))
-      );
-      const images = await Promise.all(imagePromises);
-      articlesWithoutImages.forEach((article, index) => {
-        article.imageUrl = images[index];
-      });
-    }
-  }
-
-  // For Guardian, fetch images from article pages for ALL articles
-  // RSS feed images are protected (401), so we need to fetch from the article page
-  if (source.id.startsWith('guardian')) {
-    const imagePromises = articles.map(article =>
-      fetchOgImage(article.link)
-    );
-    const images = await Promise.all(imagePromises);
-    articles.forEach((article, index) => {
-      if (images[index]) {
-        article.imageUrl = images[index];
-      }
-    });
-  }
-
-  // For Deutsche Welle, fetch images from article pages for ALL articles
-  // RSS feed (RDF format) doesn't include images, need to fetch og:image
-  if (source.id.startsWith('deutsche-welle')) {
-    const imagePromises = articles.map(article =>
-      fetchOgImage(article.link)
-    );
-    const images = await Promise.all(imagePromises);
-    articles.forEach((article, index) => {
-      if (images[index]) {
-        article.imageUrl = images[index];
-      }
-    });
   }
 
   return articles;

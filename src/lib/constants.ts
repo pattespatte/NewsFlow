@@ -1,6 +1,7 @@
 // Storage keys
 export const STORAGE_KEYS = {
   BOOKMARKS: 'newsflow_bookmarks',
+  ARTICLES_CACHE: 'newsflow_articles_cache',
 } as const;
 
 // API Configuration

@@ -42,17 +42,20 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Skip API requests - always fetch fresh data
+  // For API requests - stale-while-revalidate: return cache instantly, update in background
   if (url.pathname.startsWith('/api/')) {
     event.respondWith(
-      fetch(request).catch(() => {
-        return new Response(
-          JSON.stringify({ error: 'Offline - please check your connection' }),
-          {
-            status: 503,
-            headers: { 'Content-Type': 'application/json' },
+      caches.open(CACHE_NAME).then(async (cache) => {
+        const cachedResponse = await cache.match(request);
+
+        const fetchPromise = fetch(request).then((networkResponse) => {
+          if (networkResponse.ok) {
+            cache.put(request, networkResponse.clone());
           }
-        );
+          return networkResponse;
+        }).catch(() => cachedResponse);
+
+        return cachedResponse || fetchPromise;
       })
     );
     return;
