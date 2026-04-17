@@ -36,6 +36,7 @@ export default function Home() {
   const [showSearch, setShowSearch] = useState(false);
   const [sourceTimings, setSourceTimings] = useState<SourceTiming[]>([]);
   const [showTimingDialog, setShowTimingDialog] = useState(false);
+  const [disabledSources, setDisabledSources] = useState<Set<string>>(new Set());
 
   // Redirect GitHub Pages to Vercel (serverless API required)
   useEffect(() => {
@@ -76,6 +77,23 @@ export default function Home() {
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.BOOKMARKS, JSON.stringify(bookmarks));
   }, [bookmarks]);
+
+  // Load disabled sources from localStorage
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.DISABLED_SOURCES);
+      if (saved) {
+        setDisabledSources(new Set(JSON.parse(saved) as string[]));
+      }
+    } catch {
+      // Invalid data, ignore
+    }
+  }, []);
+
+  // Save disabled sources to localStorage
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.DISABLED_SOURCES, JSON.stringify([...disabledSources]));
+  }, [disabledSources]);
 
   // Fetch articles progressively — batch sources, show results as each batch completes
   const fetchArticlesProgressively = useCallback(async () => {
@@ -218,6 +236,13 @@ export default function Home() {
     window.history.replaceState(null, '', url.toString());
   }, []);
 
+  // Reset to "All News" if the active source gets disabled
+  useEffect(() => {
+    if (activeSource !== ALL_SOURCES_ID && disabledSources.has(activeSource)) {
+      handleSourceChange(ALL_SOURCES_ID);
+    }
+  }, [disabledSources, activeSource, handleSourceChange]);
+
   // Toggle bookmark
   const toggleBookmark = useCallback((article: Article) => {
     setBookmarks((prev) => {
@@ -259,6 +284,21 @@ export default function Home() {
     setShowSearch((prev) => !prev);
   }, []);
 
+  // Toggle a source in the disabled filter
+  const toggleSourceFilter = useCallback((sourceId: string) => {
+    setDisabledSources(prev => {
+      const next = new Set(prev);
+      if (next.has(sourceId)) next.delete(sourceId);
+      else next.add(sourceId);
+      return next;
+    });
+  }, []);
+
+  // Bulk enable/disable all sources
+  const setAllSourceFilters = useCallback((disabled: boolean) => {
+    setDisabledSources(disabled ? new Set(NEWS_SOURCES.map(s => s.id)) : new Set());
+  }, []);
+
   // Get display articles (used for search and bookmarks modes)
   const displayArticles = useMemo(() => {
     const base = showBookmarks ? bookmarks : articles;
@@ -275,11 +315,22 @@ export default function Home() {
         })()
       : base;
 
-    return searchFiltered;
-  }, [showBookmarks, bookmarks, articles, searchQuery]);
+    // Filter out disabled sources
+    return searchFiltered.filter(a => !disabledSources.has(a.source.id));
+  }, [showBookmarks, bookmarks, articles, searchQuery, disabledSources]);
 
   // All sources for the carousel (includes "All News")
   const carouselSources = useMemo(() => [ALL_NEWS_SOURCE, ...NEWS_SOURCES], []);
+
+  // Articles filtered by disabled sources
+  const filteredArticles = useMemo(() => {
+    return articles.filter(a => !disabledSources.has(a.source.id));
+  }, [articles, disabledSources]);
+
+  // Carousel sources excluding disabled ones
+  const filteredCarouselSources = useMemo(() => {
+    return carouselSources.filter(s => s.id === ALL_SOURCES_ID || !disabledSources.has(s.id));
+  }, [carouselSources, disabledSources]);
 
   const slowSources = useMemo(() => {
     return sourceTimings.filter(t => t.timing > TIMING_THRESHOLDS.FAST);
@@ -301,6 +352,9 @@ export default function Home() {
         onSearchChange={handleSearchChange}
         onToggleSearch={handleToggleSearch}
         showSearch={showSearch}
+        disabledSources={disabledSources}
+        onToggleSource={toggleSourceFilter}
+        onSetAllSourceFilters={setAllSourceFilters}
       />
 
       {!showBookmarks && (
@@ -308,6 +362,8 @@ export default function Home() {
           <SourceTabs
             activeSource={activeSource}
             onSourceChange={handleSourceChange}
+            disabledSources={disabledSources}
+            onToggleSource={toggleSourceFilter}
           />
         </div>
       )}
@@ -332,13 +388,13 @@ export default function Home() {
         {(articles.length > 0 || !isLoading) && (
           <>
             {/* Stats Bar */}
-            {!showBookmarks && (searchQuery ? displayArticles.length > 0 : articles.length > 0) && (
+            {!showBookmarks && (searchQuery ? displayArticles.length > 0 : filteredArticles.length > 0) && (
               <div className="px-4 py-3 flex items-center justify-between border-b bg-muted/20 gap-4">
                 <p className="text-sm text-muted-foreground">
                   {searchQuery ? (
                     <>Found <span className="font-medium text-foreground">{displayArticles.length}</span> articles for "{searchQuery}"</>
                   ) : (
-                    <><span className="font-medium text-foreground">{activeSource === ALL_SOURCES_ID ? articles.length : articles.filter(a => a.source.id === activeSource).length}</span> articles</>
+                    <><span className="font-medium text-foreground">{activeSource === ALL_SOURCES_ID ? filteredArticles.length : filteredArticles.filter(a => a.source.id === activeSource).length}</span> articles</>
                   )}
                 </p>
                 {sourceTimings.length > 0 && (
@@ -390,8 +446,8 @@ export default function Home() {
             {!searchQuery && !showBookmarks ? (
               articles.length > 0 && (
                 <SourceCarousel
-                  sources={carouselSources}
-                  articles={articles}
+                  sources={filteredCarouselSources}
+                  articles={filteredArticles}
                   activeSource={activeSource}
                   onSourceChange={handleSourceChange}
                   isBookmarked={isBookmarked}

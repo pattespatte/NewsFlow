@@ -2,6 +2,7 @@
 export const STORAGE_KEYS = {
   BOOKMARKS: 'newsflow_bookmarks',
   ARTICLES_CACHE: 'newsflow_articles_cache',
+  DISABLED_SOURCES: 'newsflow_disabled_sources',
 } as const;
 
 // API Configuration
