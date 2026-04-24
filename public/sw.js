@@ -1,8 +1,7 @@
 /// <reference lib="webworker" />
 
-const CACHE_NAME = 'newsflow-v1';
+const CACHE_NAME = 'newsflow-v2';
 const STATIC_ASSETS = [
-  '/',
   '/manifest.json',
   '/icon-192.png',
   '/icon-512.png',
@@ -57,6 +56,28 @@ self.addEventListener('fetch', (event) => {
 
         return cachedResponse || fetchPromise;
       })
+    );
+    return;
+  }
+
+  // For navigation requests (HTML pages) - network first, then cache
+  if (request.mode === 'navigate') {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          if (response.ok) {
+            const responseClone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(request, responseClone);
+            });
+          }
+          return response;
+        })
+        .catch(() => {
+          return caches.match(request).then((cachedResponse) => {
+            return cachedResponse || caches.match('/');
+          });
+        })
     );
     return;
   }

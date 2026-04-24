@@ -91,7 +91,7 @@ export default function RootLayout({
             __html: `
               if ('serviceWorker' in navigator) {
                 window.addEventListener('load', () => {
-                  navigator.serviceWorker.register('${basePath}/sw.js');
+                  navigator.serviceWorker.register('${basePath}/sw.js', { updateViaCache: 'none' });
                 });
               }
             `,
