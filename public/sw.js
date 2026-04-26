@@ -1,6 +1,6 @@
 /// <reference lib="webworker" />
 
-const CACHE_NAME = 'newsflow-v2';
+const CACHE_NAME = 'newsflow-v3';
 const STATIC_ASSETS = [
   '/manifest.json',
   '/icon-192.png',
@@ -41,22 +41,10 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // For API requests - stale-while-revalidate: return cache instantly, update in background
+  // For API requests - network only (localStorage handles instant display)
+  // Previously used stale-while-revalidate which served stale SW-cached API data
+  // that conflicted with the page's own localStorage cache, causing flickering.
   if (url.pathname.startsWith('/api/')) {
-    event.respondWith(
-      caches.open(CACHE_NAME).then(async (cache) => {
-        const cachedResponse = await cache.match(request);
-
-        const fetchPromise = fetch(request).then((networkResponse) => {
-          if (networkResponse.ok) {
-            cache.put(request, networkResponse.clone());
-          }
-          return networkResponse;
-        }).catch(() => cachedResponse);
-
-        return cachedResponse || fetchPromise;
-      })
-    );
     return;
   }
 

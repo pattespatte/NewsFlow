@@ -215,11 +215,9 @@ export default function Home() {
       setLastUpdated(cached.lastUpdated);
       setSourceTimings(cached.sourceTimings);
       setIsLoading(false);
-      // Enrich cached articles that may be missing images
-      enrichArticleImages(cached.articles, cached.lastUpdated || new Date().toISOString(), cached.sourceTimings);
     }
     fetchArticlesProgressively();
-  }, [fetchArticlesProgressively, enrichArticleImages]);
+  }, [fetchArticlesProgressively]);
 
   // Handle source change
   const handleSourceChange = useCallback((sourceId: string) => {
